@@ -4,13 +4,19 @@ on:
   push:
     branches: [android/control-apk]
   workflow_dispatch:
+    inputs:
+      check_update:
+        description: Build the preceding version as well for an Android update test
+        type: boolean
+        default: true
 
-permissions:
-  contents: read
-  packages: read
+permissions: {}
 
 jobs:
   build:
+    permissions:
+      contents: read
+      packages: read
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     steps:
@@ -35,42 +41,67 @@ jobs:
           flutter precache --android
           make init
 
-      - name: Build with a temporary test key
+      - name: Build the ARM64 control APKs without access to the signing key
         env:
           GPR_KEY: ${{ github.token }}
+          ORG_GRADLE_PROJECT_unsignedControlBuild: 'true'
+          CHECK_UPDATE: ${{ github.event_name == 'push' || inputs.check_update }}
         run: |
           set -euo pipefail
-          export CONTROL_STORE_PASSWORD="$(openssl rand -hex 32)"
-          export ORG_GRADLE_PROJECT_signingConfigKeyStorePath="$RUNNER_TEMP/control.p12"
-          export ORG_GRADLE_PROJECT_signingConfigKeyAlias=control
-          export ORG_GRADLE_PROJECT_signingConfigKeyPassword="$CONTROL_STORE_PASSWORD"
-          export ORG_GRADLE_PROJECT_signingConfigKeyStorePassword="$CONTROL_STORE_PASSWORD"
-          keytool -genkeypair -alias control -keystore "$ORG_GRADLE_PROJECT_signingConfigKeyStorePath" -storetype PKCS12 \
-            -keyalg RSA -keysize 3072 -validity 3650 -dname "CN=TrustTunnel Control" \
-            -storepass:env CONTROL_STORE_PASSWORD -keypass:env CONTROL_STORE_PASSWORD
-          flutter build apk --release --no-pub --split-per-abi --target-platform android-arm64 \
-            --build-name 0.0.0-control.1 --build-number 1
+          mkdir -p unsigned
+          # Run 1 used control.1. Each later run reserves two consecutive numbers.
+          latest=$((2 * GITHUB_RUN_NUMBER - 1))
+          versions=("$latest")
+          if [[ "$CHECK_UPDATE" == true ]]; then
+            versions=("$((latest - 1))" "$latest")
+          fi
+          for version in "${versions[@]}"; do
+            flutter build apk --release --no-pub --split-per-abi --target-platform android-arm64 \
+              --build-name "0.0.0-control.$version" --build-number "$version"
+            apk="unsigned/TrustTunnel-Control-arm64-$version.apk"
+            cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$apk"
+            "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/badging"
+            # This Flutter version adds 2000 to the ARM64 versionCode for split APKs.
+            grep -F "package: name='com.adguard.trusttunnel.control' versionCode='$((2000 + version))' versionName='0.0.0-control.$version'" "$RUNNER_TEMP/badging"
+            grep -F "launchable-activity: name='com.adguard.trusttunnel.MainActivity'" "$RUNNER_TEMP/badging"
+            unzip -Z1 "$apk" > "$RUNNER_TEMP/entries"
+            grep -Fx 'lib/arm64-v8a/libtrusttunnel_android.so' "$RUNNER_TEMP/entries"
+          done
 
-      - name: Verify signature, package, and native VPN library
-        run: |
-          set -euo pipefail
-          mkdir -p control-output
-          apk=control-output/TrustTunnel-Control-arm64.apk
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$apk"
-          sdk_tools="$ANDROID_HOME/build-tools/36.0.0"
-          "$sdk_tools/apksigner" verify --verbose --print-certs "$apk"
-          "$sdk_tools/zipalign" -c -P 16 4 "$apk"
-          "$sdk_tools/aapt" dump badging "$apk" > "$RUNNER_TEMP/control-badging.txt"
-          grep -F "package: name='com.adguard.trusttunnel.control'" "$RUNNER_TEMP/control-badging.txt"
-          grep -F "launchable-activity: name='com.adguard.trusttunnel.MainActivity'" "$RUNNER_TEMP/control-badging.txt"
-          unzip -Z1 "$apk" > "$RUNNER_TEMP/control-entries.txt"
-          grep -Fx 'lib/arm64-v8a/libtrusttunnel_android.so' "$RUNNER_TEMP/control-entries.txt"
-          (cd control-output && sha256sum TrustTunnel-Control-arm64.apk > SHA256SUMS)
-          cat control-output/SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: control-unsigned-intermediate
+          path: unsigned/*.apk
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+          overwrite: true
 
+  sign:
+    needs: build
+    if: github.ref == 'refs/heads/android/control-apk'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: control-unsigned-intermediate
+          path: unsigned
+      - name: Install the pinned Android build tools
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0"'
+      - name: Sign and check each APK with the permanent control certificate
+        env:
+          CONTROL_SIGNING_PEM: ${{ secrets.TRUSTTUNNEL_CONTROL_SIGNING_PEM }}
+        run: bash .github/scripts/sign-android-control.sh unsigned control-output
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: TrustTunnel-Control-arm64
           path: control-output/
           if-no-files-found: error
           compression-level: 0
+          overwrite: true

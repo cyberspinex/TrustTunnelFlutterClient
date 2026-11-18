@@ -39,6 +39,9 @@ def getSigningProp = { String name ->
     return v != null ? v.toString() : null
 }
 
+// The control workflow signs its APKs on a separate runner after compilation.
+def unsignedControlBuild = providers.gradleProperty("unsignedControlBuild").orNull == "true"
+
 android {
     namespace = "com.adguard.trusttunnel"
     compileSdk = 36
@@ -65,17 +68,21 @@ android {
     }
 
     signingConfigs {
-        release {
-            keyAlias = getSigningProp("signingConfigKeyAlias")
-            keyPassword = getSigningProp("signingConfigKeyPassword")
-            storeFile = rootProject.file(getSigningProp("signingConfigKeyStorePath"))
-            storePassword = getSigningProp("signingConfigKeyStorePassword")
+        if (!unsignedControlBuild) {
+            release {
+                keyAlias = getSigningProp("signingConfigKeyAlias")
+                keyPassword = getSigningProp("signingConfigKeyPassword")
+                storeFile = rootProject.file(getSigningProp("signingConfigKeyStorePath"))
+                storePassword = getSigningProp("signingConfigKeyStorePassword")
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (!unsignedControlBuild) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
