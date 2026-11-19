@@ -19,4 +19,5 @@
     <string name="qs_stop_failed">Не удалось отключиться. Повторите попытку</string>
     <string name="qs_permission_failed">Проверьте разрешение VPN и повторите попытку</string>
     <string name="qs_permission_denied">Разрешение VPN отклонено. Нажмите для повтора</string>
+    <string name="qs_interrupted">Соединение завершено</string>
 </resources>

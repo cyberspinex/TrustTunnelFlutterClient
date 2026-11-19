@@ -237,14 +237,12 @@ class _VpnScopeState extends State<VpnScope> with VpnScopeExitHandlingMixin<VpnS
   StreamSubscription<VpnLog>? _logStreamSub;
   StreamSubscription<VpnState>? _vpnStreamSub;
   StreamSubscription<Object?>? _tileSessionSub;
-  final _tileServer = ValueNotifier<String?>(null);
 
   @override
   VpnState get state => _controller.state.vpnState;
 
   @override
-  String? get currentlyConnectedServerId =>
-      state == VpnState.disconnected ? null : (_tileServer.value ?? _controller.state.currentlyConnectedServerId);
+  String? get currentlyConnectedServerId => _controller.state.currentlyConnectedServerId;
 
   @override
   bool get isExitProcessing => _controller.state.isExitProcessing;
@@ -292,11 +290,14 @@ class _VpnScopeState extends State<VpnScope> with VpnScopeExitHandlingMixin<VpnS
       onExitStopped: completeVpnExitStop,
       initialState: widget.initialState,
     );
-    _vpnChangesListenable = Listenable.merge([_controller, _logsController, _tileServer]);
+    _vpnChangesListenable = Listenable.merge([_controller, _logsController]);
     if (Platform.isAndroid) {
       _tileSessionSub = const EventChannel('trusttunnel/tile_session')
           .receiveBroadcastStream()
-          .listen((id) => _tileServer.value = id as String?, onError: _onSubscriptionError);
+          .listen((value) {
+            final tile = value as Map<Object?, Object?>?;
+            _controller.onTileSessionChanged(tile?['id'] as String?, tile?['digest'] as String?);
+          }, onError: _onSubscriptionError);
     }
 
     // VPN also runs while minimized, when only the tray is visible. Listen to settings directly
@@ -439,7 +440,6 @@ class _VpnScopeState extends State<VpnScope> with VpnScopeExitHandlingMixin<VpnS
 
     _controller.dispose();
     unawaited(_tileSessionSub?.cancel().catchError(_onSubscriptionError));
-    _tileServer.dispose();
     _logsController.dispose();
     _operationErrorNotifier.dispose();
     super.dispose();

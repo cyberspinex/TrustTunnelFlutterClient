@@ -67,6 +67,16 @@ jobs:
           run-id: ${{ steps.source.outputs.id }}
           name: TrustTunnel-NAVQS-arm64
           path: signed
+      - name: Locate the accepted version for a real in-place upgrade when available
+        if: steps.source.outputs.id != '' && github.ref_name == 'android/quick-settings'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/$GITHUB_REPOSITORY/actions/runs/44484220575/artifacts" --jq '.artifacts[] | select(.name == "TrustTunnel-NAVQS-arm64" and .expired == false) | .id' | grep -q .; then
+            gh run download 44484220575 -n TrustTunnel-NAVQS-arm64 -D baseline
+            (cd baseline && sha256sum -c SHA256SUMS)
+          fi
       - name: Check APK digest and run the installed application on Android 15
         if: steps.source.outputs.id != ''
         run: |

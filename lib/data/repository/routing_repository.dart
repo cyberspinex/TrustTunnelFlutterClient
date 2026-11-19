@@ -12,6 +12,8 @@ abstract class RoutingRepository {
 
   Future<void> setDefaultRoutingMode({required String id, required RoutingMode mode});
 
+  Future<void> saveRoutingRules({required String id, required RoutingProfileData data});
+
   Future<void> setProfileName({required String id, required String name});
 
   Future<void> setRules({required String id, required RoutingMode mode, required List<String> rules});
@@ -43,6 +45,10 @@ class RoutingRepositoryImpl implements RoutingRepository {
 
     return profile;
   }
+
+  @override
+  Future<void> saveRoutingRules({required String id, required RoutingProfileData data}) =>
+      _routingDataSource.saveRoutingRules(id: id, data: data);
 
   @override
   Future<void> setDefaultRoutingMode({required String id, required RoutingMode mode}) =>

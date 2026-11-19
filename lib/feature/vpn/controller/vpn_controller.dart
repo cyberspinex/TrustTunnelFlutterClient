@@ -43,6 +43,18 @@ final class VpnController extends BaseStateController<VpnControllerState> with S
 
   bool get isDisconnectedForExit => state.isDisconnectedForExit;
 
+  ({String id, String digest})? _pendingTileSession;
+
+  // Both Android streams replay independently when a foreground engine attaches.
+  void onTileSessionChanged(String? id, String? digest) => handle(
+    () {
+      _pendingTileSession = id != null && digest != null ? (id: id, digest: digest) : null;
+      _updateVpnOperationsProcessingInfo(_vpnOperationsProcessingInfo.copyWith(needsSynchronization: true));
+      _handlePendingWork();
+    },
+    errorHandler: _onHandlerError,
+  );
+
   bool get _isRunning => state.isRunning;
 
   String? get _configurationTargetId => _isRunning
@@ -362,6 +374,20 @@ final class VpnController extends BaseStateController<VpnControllerState> with S
     final shouldSkipSynchronization = !_vpnOperationsProcessingInfo.needsSynchronization || _sources.loading;
     if (shouldSkipSynchronization || _sources.hasErrors) {
       return;
+    }
+
+    final tile = _pendingTileSession;
+    if (tile != null && _isRunning && !_vpnOperationsProcessingInfo.startSubmitted) {
+      _pendingTileSession = null;
+      final current = _sources.configurationFor(tile.id);
+      final matches = current?.matchesTileDigest(tile.digest) ?? false;
+      _updateState(state.copyWith(
+        currentlyConnectedServerId: ValueData(tile.id),
+        vpnOperationsProcessingInfo: _vpnOperationsProcessingInfo.copyWith(
+          configuration: ValueData(matches ? current : null),
+          configurationDeleted: false,
+        ),
+      ));
     }
 
     if (_sources.servers.isEmpty) {

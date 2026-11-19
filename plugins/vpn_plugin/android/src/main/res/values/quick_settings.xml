@@ -19,4 +19,5 @@
     <string name="qs_stop_failed">Could not disconnect. Try again</string>
     <string name="qs_permission_failed">Check VPN permission and retry</string>
     <string name="qs_permission_denied">VPN permission declined. Tap to retry</string>
+    <string name="qs_interrupted">Connection ended</string>
 </resources>

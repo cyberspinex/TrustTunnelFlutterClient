@@ -11,6 +11,7 @@ import com.adguard.trusttunnel.AppNotifier
 import com.adguard.trusttunnel.VpnService
 import io.flutter.plugin.common.EventChannel
 import java.io.File
+import java.security.MessageDigest
 import java.util.ArrayDeque
 import java.util.concurrent.ThreadLocalRandom
 
@@ -38,11 +39,11 @@ internal class NativeVpnImpl private constructor(private val context: Context) :
     private var appRequest: AppStart? = null
     private var afterStop: AppStart? = null
     private var permissionServer: String? = null
-    private var tileServer: String? = null
+    private var tileSession: Map<String, String>? = null
     private var awaitingConnection = false
     private var problem: Int? = null
     val states = ReplayStream { state.ordinal }
-    val tileSessions = ReplayStream { tileServer }
+    val tileSessions = ReplayStream { tileSession }
     val queryLogHandler = QueryLogStreamHandler()
 
     init {
@@ -80,11 +81,16 @@ internal class NativeVpnImpl private constructor(private val context: Context) :
         main.post {
             val initial = !known
             known = true
+            val previous = this.state
             this.state = next
             if (next == VpnManagerState.DISCONNECTED) {
-                if (!initial && awaitingConnection && stage != Stage.STOPPING) problem = R.string.qs_failed
+                if (!initial && stage != Stage.STOPPING && previous != VpnManagerState.DISCONNECTED) {
+                    problem = if (awaitingConnection) R.string.qs_failed else R.string.qs_interrupted
+                } else if (!initial && awaitingConnection && stage == Stage.STARTING) {
+                    problem = R.string.qs_failed
+                }
                 awaitingConnection = false
-                tileServer = null
+                tileSession = null
                 tileSessions.emit()
                 if (stage == Stage.STARTING || stage == Stage.STOPPING) setStage(Stage.IDLE)
             } else {
@@ -244,7 +250,10 @@ internal class NativeVpnImpl private constructor(private val context: Context) :
                 return
             }
             appRequest = null
-            tileServer = externalId
+            tileSession = externalId?.let {
+                val digest = MessageDigest.getInstance("SHA-256").digest(config.toByteArray(Charsets.UTF_8))
+                mapOf("id" to it, "digest" to digest.joinToString("") { byte -> "%02x".format(byte) })
+            }
             tileSessions.emit()
             awaitingConnection = true
             setStage(Stage.STARTING)
@@ -271,7 +280,7 @@ internal class NativeVpnImpl private constructor(private val context: Context) :
         afterStop = null
         awaitingConnection = false
         if (state == VpnManagerState.DISCONNECTED) {
-            tileServer = null
+            tileSession = null
             tileSessions.emit()
         }
         invalidate()

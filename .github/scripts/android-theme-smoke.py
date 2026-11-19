@@ -72,7 +72,7 @@ def main():
     args = parser.parse_args()
     args.evidence.mkdir(parents=True, exist_ok=True)
     print("Device ABIs:", adb("shell", "getprop", "ro.product.cpu.abilist").decode().strip(), flush=True)
-    installed = subprocess.check_output(["adb", "install", str(args.apk)], timeout=120)
+    installed = subprocess.check_output(["adb", "install", "-r", str(args.apk)], timeout=120)
     print(installed.decode().strip(), flush=True)
     package = adb("shell", "dumpsys", "package", PACKAGE).decode()
     print(next(line.strip() for line in package.splitlines() if "versionCode=" in line), flush=True)

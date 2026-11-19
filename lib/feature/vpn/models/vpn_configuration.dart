@@ -1,4 +1,9 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:trusttunnel/common/utils/vpn_config_builder.dart';
+import 'package:vpn_plugin/domain/configuration_codec.dart';
 import 'package:trusttunnel/data/model/routing_profile.dart';
 import 'package:trusttunnel/data/model/server.dart';
 import 'package:trusttunnel/data/model/vpn_configuration_log_level.dart';
@@ -29,6 +34,17 @@ final class VpnConfiguration {
          ),
        ),
        excludedRoutes = List.unmodifiable(excludedRoutes);
+
+  /// Compared once when the UI attaches to a VPN started by the Android tile.
+  bool matchesTileDigest(String digest) {
+    final config = buildVpnConfig(
+      server: server.serverData,
+      routingProfile: routingProfile.data,
+      excludedRoutes: excludedRoutes,
+      logLevel: logLevel,
+    );
+    return sha256.convert(utf8.encode(const ConfigurationCodec().encode(config))).toString() == digest;
+  }
 
   @override
   int get hashCode => Object.hashAll([

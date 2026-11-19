@@ -29,7 +29,7 @@ class RoutingDataSourceImpl implements RoutingDataSource {
 
   /// {@macro routing_data_source_add_new_profile}
   @override
-  Future<RoutingProfile> addNewProfile(RoutingProfileData request) async {
+  Future<RoutingProfile> addNewProfile(RoutingProfileData request) => _database.transaction(() async {
     final resultId = await _database.routingProfiles.insertOnConflictUpdate(
       db.RoutingProfilesCompanion.insert(
         name: request.name,
@@ -69,7 +69,7 @@ class RoutingDataSourceImpl implements RoutingDataSource {
         vpnRules: request.vpnRules,
       ),
     );
-  }
+  });
 
   /// {@macro routing_data_source_get_all_profiles}
   ///
@@ -128,6 +128,14 @@ class RoutingDataSourceImpl implements RoutingDataSource {
     updateStatement.where((p) => p.id.equals(int.parse(id)));
     await updateStatement.write(db.RoutingProfilesCompanion(name: Value(name)));
   }
+
+  @override
+  Future<void> saveRoutingRules({required String id, required RoutingProfileData data}) =>
+      _database.transaction(() async {
+        await setDefaultRoutingMode(id: id, mode: data.defaultMode);
+        await setRules(id: id, mode: RoutingMode.bypass, rules: data.bypassRules);
+        await setRules(id: id, mode: RoutingMode.vpn, rules: data.vpnRules);
+      });
 
   /// {@macro routing_data_source_set_rules}
   ///

@@ -52,4 +52,12 @@ adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
 apk=$(find signed -name '*.apk' | sort -V | tail -1)
 sha256sum "$apk"
+if [[ "${GITHUB_REF_NAME:-}" == android/quick-settings ]]; then
+  baseline_args=()
+  if [[ -f baseline/TrustTunnel-NAVQS-arm64-11.apk ]]; then
+    baseline_args+=(--baseline baseline/TrustTunnel-NAVQS-arm64-11.apk)
+  fi
+  python3 .github/scripts/android-tile-smoke.py "$apk" theme-screens "${baseline_args[@]}"
+  adb shell pm clear com.adguard.trusttunnel.control
+fi
 python3 .github/scripts/android-theme-smoke.py "$apk" theme-screens

@@ -99,21 +99,7 @@ final class RoutingDetailsController extends BaseStateController<RoutingDetailsS
           state.data,
         )).id;
       } else {
-        await Future.wait([
-          _repository.setDefaultRoutingMode(id: profileId, mode: state.data.defaultMode),
-
-          _repository.setRules(
-            id: profileId,
-            mode: RoutingMode.bypass,
-            rules: state.data.bypassRules,
-          ),
-
-          _repository.setRules(
-            id: profileId,
-            mode: RoutingMode.vpn,
-            rules: state.data.vpnRules,
-          ),
-        ]);
+        await _repository.saveRoutingRules(id: profileId, data: state.data);
       }
 
       onSaved();
@@ -134,18 +120,7 @@ final class RoutingDetailsController extends BaseStateController<RoutingDetailsS
         ),
       );
 
-      await Future.wait([
-        _repository.setRules(
-          id: _profileId!,
-          mode: RoutingMode.vpn,
-          rules: [],
-        ),
-        _repository.setRules(
-          id: _profileId,
-          mode: RoutingMode.bypass,
-          rules: [],
-        ),
-      ]);
+      await _repository.removeAllRules(id: _profileId!);
 
       setState(
         RoutingDetailsState.idle(

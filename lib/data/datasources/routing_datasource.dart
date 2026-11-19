@@ -46,6 +46,8 @@ abstract class RoutingDataSource {
   /// {@endtemplate}
   Future<void> setDefaultRoutingMode({required String id, required RoutingMode mode});
 
+  Future<void> saveRoutingRules({required String id, required RoutingProfileData data});
+
   /// {@template routing_data_source_set_profile_name}
   /// Updates the user-visible name of a profile.
   /// {@endtemplate}

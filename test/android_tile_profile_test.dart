@@ -6,6 +6,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trusttunnel/common/logging/app_logger.dart';
 import 'package:trusttunnel/data/database/app_database.dart';
+import 'package:trusttunnel/data/datasources/local_sources/routing_datasource_impl.dart';
+import 'package:trusttunnel/data/model/routing_mode.dart';
+import 'package:trusttunnel/data/model/routing_profile_data.dart';
 import 'package:trusttunnel/data/model/vpn_configuration_log_level.dart';
 import 'package:trusttunnel/feature/vpn/android/tile_profile.dart';
 
@@ -78,6 +81,35 @@ void main() {
       await add(db, 'Usable');
       await add(db, 'Invalid', selected: true, domain: '');
       expect(await read(db), {'error': 'invalid_profile'});
+    }),
+  );
+  test(
+    'a rejected rules edit rolls back the mode and both rule lists',
+    () => withProfiles((db) async {
+      await add(db, 'Saved', selected: true);
+      final routing = RoutingDataSourceImpl(database: db);
+      await routing.saveRoutingRules(
+        id: '0',
+        data: const RoutingProfileData.empty(defaultMode: RoutingMode.vpn, bypassRules: ['original.example.org']),
+      );
+      final before = (await read(db))['config'];
+      await db.customStatement(
+        "CREATE TRIGGER fail_test_rule BEFORE INSERT ON profile_rules "
+        "WHEN new.data = 'invalid.example.org' BEGIN SELECT RAISE(ABORT, 'test rollback'); END",
+      );
+      await expectLater(
+        routing.saveRoutingRules(
+          id: '0',
+          data: const RoutingProfileData.empty(
+            defaultMode: RoutingMode.bypass,
+            bypassRules: [],
+            vpnRules: ['invalid.example.org'],
+          ),
+        ),
+        throwsA(anything),
+      );
+      expect((await read(db))['config'], before);
+      expect(before, contains('original.example.org'));
     }),
   );
 }

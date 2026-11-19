@@ -152,7 +152,10 @@ class VpnPluginImpl implements VpnPlugin {
 
   /// {@macro vpn_plugin_states}
   @override
-  Stream<VpnManagerState> get states => _vpnChannel.receiveBroadcastStream().map(_mapNativeToState).distinct();
+  Stream<VpnManagerState> get states => _vpnChannel.receiveBroadcastStream().map(_mapNativeToState).distinct(
+    // A second Android DISCONNECTED also acknowledges a cancelled or rejected pending start.
+    (previous, next) => previous == next && !(Platform.isAndroid && next == VpnManagerState.disconnected),
+  );
 
   /// {@macro vpn_plugin_query_log}
   @override
