@@ -66,7 +66,7 @@ class _AppVersionScreenState extends State<AppVersionScreen> {
               ),
             )
           : DefaultPage.responsive(
-              title: AppConstants.appName,
+              title: AppConstants.displayName,
               descriptionText: _appVersion == null ? null : 'v$_appVersion',
               imagePath: AssetImages.about,
               desktopImagePath: AssetImages.aboutDesktop,

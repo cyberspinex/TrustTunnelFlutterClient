@@ -46,7 +46,7 @@ class _AppState extends State<App> {
     home: const AppSystemUIShell(
       child: NavigationScreen(),
     ),
-    title: AppConstants.appName,
+    title: AppConstants.displayName,
     locale: Localization.defaultLocale,
     localizationsDelegates: Localization.localizationDelegates,
     supportedLocales: Localization.supportedLocales,

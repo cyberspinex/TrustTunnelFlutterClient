@@ -1,4 +1,4 @@
-name: Android control APK
+name: TrustTunnel NAVQS Android APK
 
 on:
   push:
@@ -41,7 +41,7 @@ jobs:
           flutter precache --android
           make init
 
-      - name: Build the ARM64 control APKs without access to the signing key
+      - name: Build the TrustTunnel NAVQS ARM64 APKs without access to the signing key
         env:
           GPR_KEY: ${{ github.token }}
           ORG_GRADLE_PROJECT_unsignedControlBuild: 'true'
@@ -57,12 +57,13 @@ jobs:
           fi
           for version in "${versions[@]}"; do
             flutter build apk --release --no-pub --split-per-abi --target-platform android-arm64 \
-              --build-name "0.0.0-control.$version" --build-number "$version"
-            apk="unsigned/TrustTunnel-Control-arm64-$version.apk"
+              --build-name "0.0.0-navqs.$version" --build-number "$version"
+            apk="unsigned/TrustTunnel-NAVQS-arm64-$version.apk"
             cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$apk"
             "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/badging"
             # This Flutter version adds 2000 to the ARM64 versionCode for split APKs.
-            grep -F "package: name='com.adguard.trusttunnel.control' versionCode='$((2000 + version))' versionName='0.0.0-control.$version'" "$RUNNER_TEMP/badging"
+            grep -F "package: name='com.adguard.trusttunnel.control' versionCode='$((2000 + version))' versionName='0.0.0-navqs.$version'" "$RUNNER_TEMP/badging"
+            grep -Fx "application-label:'TrustTunnel NAVQS'" "$RUNNER_TEMP/badging"
             grep -F "launchable-activity: name='com.adguard.trusttunnel.MainActivity'" "$RUNNER_TEMP/badging"
             unzip -Z1 "$apk" > "$RUNNER_TEMP/entries"
             grep -Fx 'lib/arm64-v8a/libtrusttunnel_android.so' "$RUNNER_TEMP/entries"
@@ -70,7 +71,7 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: control-unsigned-intermediate
+          name: navqs-unsigned-intermediate
           path: unsigned/*.apk
           if-no-files-found: error
           retention-days: 3
@@ -90,18 +91,18 @@ jobs:
           sparse-checkout: .github/scripts
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: control-unsigned-intermediate
+          name: navqs-unsigned-intermediate
           path: unsigned
       - name: Install the pinned Android build tools
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0"'
       - name: Sign and check each APK with the permanent control certificate
         env:
           CONTROL_SIGNING_PEM: ${{ secrets.TRUSTTUNNEL_CONTROL_SIGNING_PEM }}
-        run: bash .github/scripts/sign-android-control.sh unsigned control-output
+        run: bash .github/scripts/sign-android-control.sh unsigned navqs-output
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: TrustTunnel-Control-arm64
-          path: control-output/
+          name: TrustTunnel-NAVQS-arm64
+          path: navqs-output/
           if-no-files-found: error
           compression-level: 0
           overwrite: true

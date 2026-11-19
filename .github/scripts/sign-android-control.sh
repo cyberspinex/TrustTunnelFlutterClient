@@ -17,7 +17,7 @@ openssl x509 -in "$key_dir/bundle.pem" -outform DER -out "$key_dir/cert.der"
 printf '%s  %s\n' "$expected_cert" "$key_dir/cert.der" | sha256sum --check --status
 
 mkdir -p "$output_dir"
-for input in "$input_dir"/TrustTunnel-Control-arm64-*.apk; do
+for input in "$input_dir"/TrustTunnel-NAVQS-arm64-*.apk; do
   output="$output_dir/$(basename "$input")"
   "$sdk_tools/zipalign" -f -P 16 4 "$input" "$key_dir/aligned.apk"
   "$sdk_tools/apksigner" sign --key "$key_dir/key.der" --cert "$key_dir/cert.der" \
@@ -27,4 +27,4 @@ for input in "$input_dir"/TrustTunnel-Control-arm64-*.apk; do
   grep -Fx 'Verified using v2 scheme (APK Signature Scheme v2): true' "$key_dir/signature"
   "$sdk_tools/zipalign" -c -P 16 4 "$output"
 done
-(cd "$output_dir" && sha256sum TrustTunnel-Control-arm64-*.apk > SHA256SUMS)
+(cd "$output_dir" && sha256sum TrustTunnel-NAVQS-arm64-*.apk > SHA256SUMS)
