@@ -7,7 +7,7 @@ umask 077
 input_dir=$1
 output_dir=$2
 sdk_tools="$ANDROID_HOME/build-tools/36.0.0"
-expected_cert=21e28fed9d2988ba48019ef04ea689bacdf469a277a26d7988aa2cba15074e47
+expected_cert=17e7dd89e8323447136cc9439e2157f5efb6218b52848679d0a09c1f627c3454
 key_dir=$(mktemp -d "${RUNNER_TEMP:-/tmp}/control-key.XXXXXXXX")
 trap 'rm -rf -- "$key_dir"' EXIT
 printf '%s\n' "$CONTROL_SIGNING_PEM" > "$key_dir/bundle.pem"
