@@ -120,6 +120,18 @@ def consent(button):
     press(answer[0])
 
 
+def clear_service_evidence():
+    adb("logcat", "-b", "events", "-c")
+
+
+def service_started():
+    component = PKG + "/com.adguard.trusttunnel.VpnService"
+    events = adb("logcat", "-b", "events", "-d", "-s", "am_create_service").stdout.decode(errors="replace")
+    if component in events or component in shell("dumpsys", "activity", "services", PKG):
+        return True
+    return False
+
+
 def checkpoint(message):
     print("PASS", message, flush=True)
 
@@ -178,6 +190,7 @@ def main():
     consent("button2")
     shade(["VPN permission declined"])
     checkpoint("System consent denied and the tile is ready to retry")
+    clear_service_evidence()
     tap_tile("VPN permission declined")
     consent("button1")
     time.sleep(1.0)
@@ -186,22 +199,38 @@ def main():
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
+    until(service_started, 20, "Android to record creation of the native VPN service")
     checkpoint("System consent approval starts the native VPN path; unreachable loopback endpoint stays inactive")
     if "allow" not in shell("cmd", "appops", "get", PKG, "ACTIVATE_VPN"):
         raise AssertionError("Expected Android VPN authorization")
     checkpoint("Approval persisted in Android")
     cold()
+    clear_service_evidence()
     shell("cmd", "statusbar", "expand-settings")
     tap_tile("Disconnected")
     status, tile = shade(statuses)
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
+    until(service_started, 20, "a native service start from a cold process")
     checkpoint("Cold start with previously granted permission and closed main UI")
     shell("cmd", "statusbar", "collapse")
     theme.start()
     theme.check_surface("tile-main-ui-after-cold-start", theme.DARK if args.baseline else theme.LIGHT, args.evidence)
     checkpoint("Main activity can reopen after headless profile reads")
+    shell("input", "keyevent", "KEYCODE_HOME")
+    adb("reboot")
+    adb("wait-for-device", timeout=110)
+    until(lambda: shell("getprop", "sys.boot_completed") == "1", 120, "Android reboot")
+    shell("input", "keyevent", "KEYCODE_WAKEUP")
+    shell("wm", "dismiss-keyguard")
+    tap_tile("Disconnected")
+    status, tile = shade(statuses)
+    if status != "Connection failed":
+        press(tile)
+        shade(["Disconnected", "Connection failed"])
+    until(service_started, 20, "a native service start after reboot")
+    checkpoint("Tile can start after reboot and first unlock without opening TrustTunnel")
 
 
 if __name__ == "__main__":

@@ -46,9 +46,10 @@ jobs:
             fi
             gh api --method GET "repos/$GITHUB_REPOSITORY/actions/artifacts" \
               -f name=TrustTunnel-NAVQS-arm64 -f per_page=100 \
-              --jq '.artifacts[] | select(.expired == false and .workflow_run.head_branch == env.GITHUB_REF_NAME) | [.workflow_run.id, .workflow_run.head_sha] | @tsv' > "$RUNNER_TEMP/candidates"
+              --jq '.artifacts[] | select(.expired == false) | [.workflow_run.id, .workflow_run.head_sha, .workflow_run.head_branch] | @tsv' > "$RUNNER_TEMP/candidates"
             run=''
-            while read -r candidate revision; do
+            while read -r candidate revision branch; do
+              [[ "$branch" == "$GITHUB_REF_NAME" ]] || continue
               if git cat-file -e "$revision^{commit}" && git diff --quiet "$revision" HEAD -- . \
                 ':(exclude).github/workflows/android-control.yml' ':(exclude).github/workflows/android-theme-emulator.yml' \
                 ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py' ':(exclude).github/scripts/android-tile-smoke.py'; then

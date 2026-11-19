@@ -5,7 +5,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trusttunnel/common/logging/app_logger.dart';
-import 'package:trusttunnel/data/database/app_database.dart';
+import 'package:trusttunnel/data/database/app_database.dart' hide RoutingMode;
 import 'package:trusttunnel/data/datasources/local_sources/routing_datasource_impl.dart';
 import 'package:trusttunnel/data/model/routing_mode.dart';
 import 'package:trusttunnel/data/model/routing_profile_data.dart';
