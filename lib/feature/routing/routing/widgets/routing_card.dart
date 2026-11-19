@@ -11,6 +11,7 @@ import 'package:trusttunnel/feature/routing/routing_details/widgets/routing_deta
 import 'package:trusttunnel/widgets/common/custom_list_tile_separated.dart';
 import 'package:trusttunnel/widgets/common/scaffold_messenger_provider.dart';
 import 'package:trusttunnel/widgets/custom_icon.dart';
+import 'package:trusttunnel/widgets/menu/menu_item_content.dart';
 
 class RoutingCard extends StatelessWidget {
   final RoutingProfile routingProfile;
@@ -32,37 +33,18 @@ class RoutingCard extends StatelessWidget {
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
         PopupMenuItem<String>(
           onTap: () => _onEditName(context),
-          child: Row(
-            children: [
-              const CustomIcon(
-                icon: AssetIcons.modeEdit,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                context.ln.editProfileName,
-                style: context.textTheme.bodyLarge,
-              ),
-            ],
+          child: MenuItemContent(
+            icon: AssetIcons.modeEdit,
+            label: context.ln.editProfileName,
           ),
         ),
         if (!RoutingProfileUtils.isDefaultRoutingProfile(profile: routingProfile))
           PopupMenuItem<String>(
             onTap: () => _onDeleteProfile(context),
-            child: Row(
-              children: [
-                CustomIcon.medium(
-                  icon: AssetIcons.delete,
-                  color: context.colors.error,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  context.ln.deleteProfile,
-                  style: context.textTheme.bodyLarge?.copyWith(
-                    color: context.colors.error,
-                  ),
-                ),
-              ],
+            child: MenuItemContent(
+              icon: AssetIcons.delete,
+              label: context.ln.deleteProfile,
+              danger: true,
             ),
           ),
       ],

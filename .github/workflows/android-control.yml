@@ -2,7 +2,7 @@ name: TrustTunnel NAVQS Android APK
 
 on:
   push:
-    branches: [android/control-apk]
+    branches: [android/control-apk, android/dark-theme]
   workflow_dispatch:
     inputs:
       check_update:
@@ -41,11 +41,17 @@ jobs:
           flutter precache --android
           make init
 
+      - name: Check Android theme behavior, contrast and VPN scope
+        if: github.ref == 'refs/heads/android/dark-theme'
+        run: |
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+          flutter test --no-pub --reporter expanded test/android_theme_test.dart test/android_theme_widget_test.dart
+
       - name: Build the TrustTunnel NAVQS ARM64 APKs without access to the signing key
         env:
           GPR_KEY: ${{ github.token }}
           ORG_GRADLE_PROJECT_unsignedControlBuild: 'true'
-          CHECK_UPDATE: ${{ github.event_name == 'push' || inputs.check_update }}
+          CHECK_UPDATE: ${{ (github.ref == 'refs/heads/android/control-apk' && github.event_name == 'push') || inputs.check_update }}
         run: |
           set -euo pipefail
           mkdir -p unsigned
@@ -80,7 +86,7 @@ jobs:
 
   sign:
     needs: build
-    if: github.ref == 'refs/heads/android/control-apk'
+    if: github.ref == 'refs/heads/android/control-apk' || github.ref == 'refs/heads/android/dark-theme'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -88,6 +94,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          ref: ba202d63950529120273ce426486c6ddc91d8521
           sparse-checkout: .github/scripts
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
@@ -106,3 +113,43 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           overwrite: true
+
+  android-theme-emulator:
+    if: github.ref == 'refs/heads/android/dark-theme'
+    needs: sign
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: TrustTunnel-NAVQS-arm64
+          path: signed
+      - name: Run the signed APK on Android 15
+        run: |
+          set -euo pipefail
+          image='system-images;android-35;google_apis;x86_64'
+          cli="$ANDROID_HOME/cmdline-tools/latest/bin"
+          "$cli/sdkmanager" "platform-tools" "emulator" "$image"
+          echo no | "$cli/avdmanager" create avd --name theme-test --package "$image" --device pixel_2
+          sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+          "$ANDROID_HOME/emulator/emulator" -avd theme-test -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          emulator_pid=$!
+          trap 'kill "$emulator_pid" || true' EXIT
+          timeout 360 bash -c 'until adb shell getprop sys.boot_completed 2>/dev/null | grep -q 1; do sleep 4; done'
+          adb shell input keyevent KEYCODE_WAKEUP
+          adb shell wm dismiss-keyguard
+          apk=$(find signed -name '*.apk' | sort -V | tail -1)
+          python3 .github/scripts/android-theme-smoke.py "$apk" theme-screens
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: android-theme-screens-api35
+          path: theme-screens
+          if-no-files-found: ignore
+          retention-days: 7

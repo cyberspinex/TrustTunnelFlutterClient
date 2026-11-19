@@ -8,6 +8,7 @@ import 'package:trusttunnel/common/logging/enum/logging_level.dart';
 import 'package:trusttunnel/common/logging/enum/logging_security_type.dart';
 import 'package:trusttunnel/common/theme/app_theme.dart';
 import 'package:trusttunnel/common/theme/theme_preference.dart';
+import 'package:trusttunnel/data/model/routing_mode.dart';
 import 'package:trusttunnel/data/model/routing_profile.dart';
 import 'package:trusttunnel/data/model/routing_profile_data.dart';
 import 'package:trusttunnel/data/model/server.dart';
@@ -31,6 +32,8 @@ import 'package:trusttunnel/feature/settings/app_logging/widgets/scope/app_loggi
 import 'package:trusttunnel/feature/settings/excluded_routes/widgets/scope/excluded_routes_scope.dart';
 import 'package:trusttunnel/feature/settings/settings/widgets/theme_settings_tile.dart';
 import 'package:trusttunnel/feature/vpn/widgets/vpn_scope.dart';
+import 'package:trusttunnel/feature/routing/routing_details/widgets/routing_details_screen_app_bar_action.dart';
+import 'package:trusttunnel/widgets/inputs/custom_text_field.dart';
 
 class _Dependencies extends Fake implements DependencyFactory {
   _Dependencies(SharedPreferences prefs) : themePreference = ThemePreference(prefs);
@@ -105,14 +108,36 @@ class _Screen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     body: ListView(children: [
       ThemeSettingsTile(preference: context.dependencyFactory.themePreference),
-      TextButton(child: const Text('Edit profile'), onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (context) => Scaffold(body: Column(children: [
-          const TextField(key: _field),
-          TextButton(child: const Text('Show dialog'), onPressed: () => showDialog<void>(
-            context: context, builder: (_) => const AlertDialog(title: Text('Still open')),
-          )),
-        ]))),
-      )),
+      TextButton(
+        child: const Text('Edit profile'),
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const _Editor()),
+        ),
+      ),
+    ]),
+  );
+}
+
+class _Editor extends StatelessWidget {
+  const _Editor();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    body: Column(children: [
+      CustomTextField(key: _field, value: 'unsaved profile', maxLines: 3),
+      RoutingDetailsScreenAppBarAction(
+        profileName: 'Test profile',
+        pickedRoutingMode: RoutingMode.vpn,
+        onClearRulesPressed: (_) {},
+        onDefaultModePicked: (_, _) {},
+      ),
+      TextButton(
+        child: const Text('Show dialog'),
+        onPressed: () => showDialog<void>(
+          context: context, builder: (_) => const AlertDialog(title: Text('Still open')),
+        ),
+      ),
     ]),
   );
 }
@@ -122,7 +147,8 @@ void main() {
     testWidgets('Android theme, navigation, and VPN stay independent at width $width', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = Size(width, 800);
-      addTearDown(tester.view.reset);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final dispatcher = tester.platformDispatcher;
       dispatcher.platformBrightnessTestValue = Brightness.light;
       addTearDown(dispatcher.clearPlatformBrightnessTestValue);
@@ -164,7 +190,7 @@ void main() {
       expect(Theme.of(home).brightness, Brightness.dark);
       await tester.tap(find.text('Edit profile'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(_field), 'unsaved profile');
+      await tester.enterText(find.byKey(_field), 'unsaved profile\n');
       await tester.tap(find.text('Show dialog'));
       await tester.pumpAndSettle();
       dispatcher.platformBrightnessTestValue = Brightness.light;
@@ -172,7 +198,16 @@ void main() {
       expect(Theme.of(tester.element(find.text('Still open'))).brightness, Brightness.light);
       Navigator.of(tester.element(find.text('Still open'))).pop();
       await tester.pumpAndSettle();
-      expect(find.text('unsaved profile'), findsOneWidget);
+      expect(find.text('unsaved profile\n'), findsOneWidget);
+      await tester.tap(find.byType(RoutingDetailsScreenAppBarAction));
+      await tester.pumpAndSettle();
+      dispatcher.platformBrightnessTestValue = Brightness.dark;
+      await tester.pumpAndSettle();
+      final deleteLabel = find.text('Delete all rules');
+      final deleteText = tester.widget<Text>(deleteLabel);
+      expect(deleteText.style!.color, tester.element(deleteLabel).colors.error);
+      Navigator.of(tester.element(deleteLabel)).pop();
+      await tester.pumpAndSettle();
       expect(vpn.state, VpnState.connected);
       expect(vpn.currentlyConnectedServerId, '1');
       expect(nativeVpn.commands, connected);

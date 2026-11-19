@@ -109,7 +109,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
     final newText = widget.value;
 
-    if (_controller.text != newText) {
+    if (oldWidget.value != newText && _controller.text != newText) {
       if (newText == null) {
         _controller.clear();
       } else {

@@ -4,6 +4,7 @@ import 'package:trusttunnel/common/extensions/context_extensions.dart';
 import 'package:trusttunnel/common/localization/localization.dart';
 import 'package:trusttunnel/feature/server/server_sharing/widgets/scope/server_sharing_scope.dart';
 import 'package:trusttunnel/widgets/custom_icon.dart';
+import 'package:trusttunnel/widgets/menu/menu_item_content.dart';
 
 enum ServersCardMenuButtonAction {
   share,
@@ -61,17 +62,9 @@ class ServersCardMenuButton extends StatelessWidget {
               top: 24,
               bottom: 16,
             ),
-            child: Row(
-              spacing: 12,
-              children: [
-                CustomIcon(
-                  icon: canShare ? AssetIcons.share : AssetIcons.copy,
-                ),
-                Text(
-                  canShare ? context.ln.share : context.ln.copyLink,
-                  style: context.textTheme.bodyLarge,
-                ),
-              ],
+            child: MenuItemContent(
+              icon: canShare ? AssetIcons.share : AssetIcons.copy,
+              label: canShare ? context.ln.share : context.ln.copyLink,
             ),
           ),
           PopupMenuItem<ServersCardMenuButtonAction>(
@@ -83,12 +76,9 @@ class ServersCardMenuButton extends StatelessWidget {
               top: 16,
               bottom: 24,
             ),
-            child: Row(
-              spacing: 12,
-              children: [
-                const CustomIcon(icon: AssetIcons.duplicate),
-                Text(context.ln.duplicate, style: context.textTheme.bodyLarge),
-              ],
+            child: MenuItemContent(
+              icon: AssetIcons.duplicate,
+              label: context.ln.duplicate,
             ),
           ),
         ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:trusttunnel/common/assets/asset_icons.dart';
-import 'package:trusttunnel/common/extensions/context_extensions.dart';
 import 'package:trusttunnel/common/localization/localization.dart';
 import 'package:trusttunnel/data/model/routing_mode.dart';
 import 'package:trusttunnel/feature/routing/routing_details/widgets/routing_details_change_routing_dialog.dart';
@@ -8,6 +7,7 @@ import 'package:trusttunnel/feature/routing/routing_details/widgets/routing_deta
 import 'package:trusttunnel/widgets/common/scaffold_messenger_provider.dart';
 
 import 'package:trusttunnel/widgets/custom_icon.dart';
+import 'package:trusttunnel/widgets/menu/menu_item_content.dart';
 
 class RoutingDetailsScreenAppBarAction extends StatelessWidget {
   final void Function(BuildContext context) onClearRulesPressed;
@@ -32,35 +32,17 @@ class RoutingDetailsScreenAppBarAction extends StatelessWidget {
     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
       PopupMenuItem<String>(
         onTap: () => _onChangeDefaultRoutingMode(context),
-        child: Row(
-          children: [
-            CustomIcon.medium(
-              icon: AssetIcons.update,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              context.ln.changeDefaultRoutingMode,
-              style: context.textTheme.bodyLarge,
-            ),
-          ],
+        child: MenuItemContent(
+          icon: AssetIcons.update,
+          label: context.ln.changeDefaultRoutingMode,
         ),
       ),
       PopupMenuItem<String>(
         onTap: () => _onClearRulesPressed(context),
-        child: Row(
-          children: [
-            CustomIcon.medium(
-              icon: AssetIcons.delete,
-              color: context.colors.error,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              context.ln.deleteAllRules,
-              style: context.textTheme.bodyLarge?.copyWith(
-                color: context.colors.error,
-              ),
-            ),
-          ],
+        child: MenuItemContent(
+          icon: AssetIcons.delete,
+          label: context.ln.deleteAllRules,
+          danger: true,
         ),
       ),
     ],
