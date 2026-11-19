@@ -111,11 +111,7 @@ class ServerDataSourceImpl implements ServerDataSource {
 
     final serverIds = serversRows.map((s) => s.id).toList();
 
-    final dnsRows = await _loadDnsAddresses({
-      ...serverIds.map(
-        (e) => e.toString(),
-      ),
-    });
+    final dnsRows = await _loadDnsAddresses(database, {...serverIds.map((e) => e.toString())});
 
     final dnsByServer = <int, List<String>>{};
     for (final d in dnsRows) {
@@ -185,7 +181,7 @@ class ServerDataSourceImpl implements ServerDataSource {
   /// DNS entries are fully replaced: existing rows are deleted and then the new
   /// list is inserted.
   @override
-  Future<void> setNewServer({required String id, required ServerData request}) async {
+  Future<void> setNewServer({required String id, required ServerData request}) => database.transaction(() async {
     final parsedId = int.parse(id);
 
     final update = database.servers.update()..where((e) => e.id.equals(parsedId));
@@ -229,13 +225,15 @@ class ServerDataSourceImpl implements ServerDataSource {
     } else {
       await database.certificateTable.deleteWhere((c) => c.serverId.equals(parsedId));
     }
-  }
+  });
 
   /// {@macro server_data_source_get_server_by_id}
   ///
   /// Throws a generic [Exception] when the server row does not exist.
   @override
-  Future<Server> getServerById({required String id}) async {
+  Future<Server> getServerById({required String id}) => readServer(database, id);
+
+  static Future<Server> readServer(db.AppDatabase database, String id) async {
     final parsedId = int.parse(id);
 
     final server = await (database.select(
@@ -246,7 +244,7 @@ class ServerDataSourceImpl implements ServerDataSource {
       throw Exception('Server not found');
     }
 
-    final dnsServers = await _loadDnsAddresses({id});
+    final dnsServers = await _loadDnsAddresses(database, {id});
 
     final cert = await (database.select(
       database.certificateTable,
@@ -322,7 +320,7 @@ class ServerDataSourceImpl implements ServerDataSource {
   /// Loads DNS server rows for the given server ids.
   ///
   /// Rows are returned in insertion order (ascending by row id).
-  Future<List<db.DnsServer>> _loadDnsAddresses(Set<String> serversIds) async {
+  static Future<List<db.DnsServer>> _loadDnsAddresses(db.AppDatabase database, Set<String> serversIds) async {
     final parsedIds = serversIds.map(int.parse).toSet();
 
     final select = database.select(database.dnsServers)
@@ -338,5 +336,5 @@ class ServerDataSourceImpl implements ServerDataSource {
     return select.get();
   }
 
-  Certificate _parseCert(db.CertificateTableData input) => const CertificateDecoder().convert(input);
+  static Certificate _parseCert(db.CertificateTableData input) => const CertificateDecoder().convert(input);
 }

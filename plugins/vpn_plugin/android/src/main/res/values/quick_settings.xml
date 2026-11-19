@@ -1,0 +1,22 @@
+<resources>
+    <string name="qs_name">TrustTunnel NAVQS</string>
+    <string name="qs_label_status">%1$s · %2$s</string>
+    <string name="qs_checking">Checking VPN state</string>
+    <string name="qs_loading">Reading server settings</string>
+    <string name="qs_permission">Waiting for VPN permission</string>
+    <string name="qs_connecting">Connecting</string>
+    <string name="qs_stopping">Disconnecting</string>
+    <string name="qs_on">Connected</string>
+    <string name="qs_off">Disconnected</string>
+    <string name="qs_network">Waiting for network</string>
+    <string name="qs_wait_retry">Waiting to reconnect</string>
+    <string name="qs_retry">Reconnecting</string>
+    <string name="qs_no_server">Add a server in the app</string>
+    <string name="qs_choose_server">Choose a server in the app</string>
+    <string name="qs_invalid_profile">Check the server settings in the app</string>
+    <string name="qs_profile_changed">Server selection changed. Tap again</string>
+    <string name="qs_failed">Connection failed. Tap to retry</string>
+    <string name="qs_stop_failed">Could not disconnect. Try again</string>
+    <string name="qs_permission_failed">Check VPN permission and retry</string>
+    <string name="qs_permission_denied">VPN permission declined. Tap to retry</string>
+</resources>

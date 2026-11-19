@@ -1,7 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:trusttunnel/common/logging/enum/logging_level.dart';
-import 'package:trusttunnel/common/logging/enum/logging_security_type.dart';
 import 'package:trusttunnel/data/model/server.dart';
 import 'package:trusttunnel/data/model/vpn_configuration_log_level.dart';
 import 'package:trusttunnel/feature/routing/routing/widgets/scope/routing_scope_controller.dart';
@@ -72,13 +70,10 @@ final class VpnConfigurationSources implements Listenable {
       server: server,
       routingProfile: profile,
       excludedRoutes: _excludedRoutesScopeController.initialExcludedRoutes,
-      logLevel: switch (_appLoggingScopeController.securityType) {
-        LoggingSecurityType.stripped => VpnConfigurationLogLevel.error,
-        LoggingSecurityType.full => switch (_appLoggingScopeController.loggingLevel) {
-          LoggingLevel.defaultLevel => VpnConfigurationLogLevel.info,
-          LoggingLevel.debug => VpnConfigurationLogLevel.debug,
-        },
-      },
+      logLevel: VpnConfigurationLogLevel.forSettings(
+        _appLoggingScopeController.securityType,
+        _appLoggingScopeController.loggingLevel,
+      ),
     );
   }
 }

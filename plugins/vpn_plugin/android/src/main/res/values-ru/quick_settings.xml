@@ -1,0 +1,22 @@
+<resources>
+    <string name="qs_name">TrustTunnel NAVQS</string>
+    <string name="qs_label_status">%1$s · %2$s</string>
+    <string name="qs_checking">Проверка состояния VPN</string>
+    <string name="qs_loading">Чтение настроек сервера</string>
+    <string name="qs_permission">Ожидание разрешения VPN</string>
+    <string name="qs_connecting">Подключение</string>
+    <string name="qs_stopping">Отключение</string>
+    <string name="qs_on">Подключено</string>
+    <string name="qs_off">Отключено</string>
+    <string name="qs_network">Ожидание сети</string>
+    <string name="qs_wait_retry">Ожидание восстановления</string>
+    <string name="qs_retry">Восстановление связи</string>
+    <string name="qs_no_server">Добавьте сервер в приложении</string>
+    <string name="qs_choose_server">Выберите сервер в приложении</string>
+    <string name="qs_invalid_profile">Проверьте настройки сервера в приложении</string>
+    <string name="qs_profile_changed">Выбор сервера изменился. Нажмите ещё раз</string>
+    <string name="qs_failed">Ошибка подключения. Нажмите для повтора</string>
+    <string name="qs_stop_failed">Не удалось отключиться. Повторите попытку</string>
+    <string name="qs_permission_failed">Проверьте разрешение VPN и повторите попытку</string>
+    <string name="qs_permission_denied">Разрешение VPN отклонено. Нажмите для повтора</string>
+</resources>

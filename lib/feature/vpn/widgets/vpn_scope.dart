@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:ui' show AppExitResponse;
 
 import 'package:adguard_logger/adguard_logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show EventChannel;
 import 'package:flutter/widgets.dart';
 import 'package:trusttunnel/data/model/vpn_log.dart';
 import 'package:trusttunnel/data/model/vpn_state.dart';
@@ -234,12 +236,15 @@ class _VpnScopeState extends State<VpnScope> with VpnScopeExitHandlingMixin<VpnS
   VpnConfigurationSources? _configurationSources;
   StreamSubscription<VpnLog>? _logStreamSub;
   StreamSubscription<VpnState>? _vpnStreamSub;
+  StreamSubscription<Object?>? _tileSessionSub;
+  final _tileServer = ValueNotifier<String?>(null);
 
   @override
   VpnState get state => _controller.state.vpnState;
 
   @override
-  String? get currentlyConnectedServerId => _controller.state.currentlyConnectedServerId;
+  String? get currentlyConnectedServerId =>
+      state == VpnState.disconnected ? null : (_tileServer.value ?? _controller.state.currentlyConnectedServerId);
 
   @override
   bool get isExitProcessing => _controller.state.isExitProcessing;
@@ -287,7 +292,12 @@ class _VpnScopeState extends State<VpnScope> with VpnScopeExitHandlingMixin<VpnS
       onExitStopped: completeVpnExitStop,
       initialState: widget.initialState,
     );
-    _vpnChangesListenable = Listenable.merge([_controller, _logsController]);
+    _vpnChangesListenable = Listenable.merge([_controller, _logsController, _tileServer]);
+    if (Platform.isAndroid) {
+      _tileSessionSub = const EventChannel('trusttunnel/tile_session')
+          .receiveBroadcastStream()
+          .listen((id) => _tileServer.value = id as String?, onError: _onSubscriptionError);
+    }
 
     // VPN also runs while minimized, when only the tray is visible. Listen to settings directly
     // so synchronization does not depend on Flutter scheduling a frame or rebuilding this scope.
@@ -428,6 +438,8 @@ class _VpnScopeState extends State<VpnScope> with VpnScopeExitHandlingMixin<VpnS
     unawaited(_vpnStreamSub?.cancel().catchError(_onSubscriptionError));
 
     _controller.dispose();
+    unawaited(_tileSessionSub?.cancel().catchError(_onSubscriptionError));
+    _tileServer.dispose();
     _logsController.dispose();
     _operationErrorNotifier.dispose();
     super.dispose();

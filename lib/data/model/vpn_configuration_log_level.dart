@@ -1,3 +1,6 @@
+import 'package:trusttunnel/common/logging/enum/logging_level.dart';
+import 'package:trusttunnel/common/logging/enum/logging_security_type.dart';
+
 /// {@template vpn_configuration_log_level}
 /// Defines the available log levels for VPN configuration.
 ///
@@ -9,5 +12,13 @@
 enum VpnConfigurationLogLevel {
   error,
   info,
-  debug,
+  debug;
+
+  static VpnConfigurationLogLevel forSettings(LoggingSecurityType security, LoggingLevel level) => switch (security) {
+    LoggingSecurityType.stripped => error,
+    LoggingSecurityType.full => switch (level) {
+      LoggingLevel.defaultLevel => info,
+      LoggingLevel.debug => debug,
+    },
+  };
 }

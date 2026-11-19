@@ -1,139 +1,61 @@
-// plugins/vpn_plugin/android/src/main/kotlin/com/adguard/trusttunnel/vpn_plugin/VpnPlugin.kt
 package com.adguard.trusttunnel.vpn_plugin
 
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.net.VpnService as AndroidVpnService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
-import io.flutter.plugin.common.PluginRegistry
 
-class VpnPlugin :
-    FlutterPlugin,
-    ActivityAware,
-    PluginRegistry.ActivityResultListener,
-    IVpnManager {
-
-    companion object {
-        private const val REQ_VPN_PREPARE = 1001
-        private const val STATE_CHANNEL_NAME = "vpn_plugin_event_channel"
-        private const val QUERY_LOG_CHANNEL_NAME = "vpn_plugin_event_channel_query_log"
-    }
-
-    private lateinit var appContext: Context
-    private var activity: Activity? = null
-
-    private var stateChannel: EventChannel? = null
-    private var queryLogChannel: EventChannel? = null
-    
-    private lateinit var vpnImpl: NativeVpnImpl
-
-    private lateinit var deepLinkImpl: DeepLinkImpl
-
-    private var pendingConfig: String? = null
-    private var pendingFallIntoRecovery: Boolean = false
+class VpnPlugin : FlutterPlugin, ActivityAware, IVpnManager {
+    @Volatile private var activity: Activity? = null
+    private lateinit var vpn: NativeVpnImpl
+    private val subscriptions = mutableMapOf<EventChannel, EventChannel.StreamHandler>()
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        appContext = binding.applicationContext
-        val messenger: BinaryMessenger = binding.binaryMessenger
-
-        vpnImpl = NativeVpnImpl(appContext)
-
+        vpn = NativeVpnImpl.get(binding.applicationContext)
+        val messenger = binding.binaryMessenger
         IVpnManager.setUp(messenger, this)
+        IDeepLink.setUp(messenger, DeepLinkImpl())
 
-        deepLinkImpl = DeepLinkImpl()
-
-        IDeepLink.setUp(messenger, deepLinkImpl)
-
-        stateChannel = EventChannel(messenger, STATE_CHANNEL_NAME).apply {
-            setStreamHandler(vpnImpl)
+        fun register(name: String, handler: EventChannel.StreamHandler) {
+            val channel = EventChannel(messenger, name)
+            channel.setStreamHandler(handler)
+            subscriptions[channel] = handler
         }
-
-        queryLogChannel = EventChannel(messenger, QUERY_LOG_CHANNEL_NAME).apply {
-            setStreamHandler(vpnImpl.queryLogHandler)
-        }
+        register("vpn_plugin_event_channel", vpn.states.handler())
+        register("trusttunnel/tile_session", vpn.tileSessions.handler())
+        register("vpn_plugin_event_channel_query_log", object : EventChannel.StreamHandler {
+            private var listening = false
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                listening = true
+                vpn.queryLogHandler.onListen(arguments, events)
+            }
+            override fun onCancel(arguments: Any?) {
+                if (listening) vpn.queryLogHandler.onCancel(arguments)
+                listening = false
+            }
+        })
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        stateChannel?.setStreamHandler(null)
-        queryLogChannel?.setStreamHandler(null)
-        stateChannel = null
-        queryLogChannel = null
-    }
-
-    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.activity
-        binding.addActivityResultListener(this)
-    }
-
-    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        activity = binding.activity
-        binding.addActivityResultListener(this)
-    }
-
-    override fun onDetachedFromActivityForConfigChanges() {
-        activity = null
-    }
-
-    override fun onDetachedFromActivity() {
-        activity = null
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode == REQ_VPN_PREPARE) {
-            val cfg = pendingConfig
-            val fallIntoRecovery = pendingFallIntoRecovery
-            pendingConfig = null
-            pendingFallIntoRecovery = false
-            if (cfg != null && resultCode == Activity.RESULT_OK) {
-                val ctx = activity ?: appContext
-                vpnImpl.startPrepared(ctx, cfg, fallIntoRecovery)
-            }
-            return true
+        subscriptions.forEach { (channel, handler) ->
+            handler.onCancel(null)
+            channel.setStreamHandler(null)
         }
-        return false
+        subscriptions.clear()
+        IVpnManager.setUp(binding.binaryMessenger, null)
+        IDeepLink.setUp(binding.binaryMessenger, null)
     }
 
-    override fun start(config: String, fallIntoRecovery: Boolean) {
-        val act = activity
-        if (act != null) {
-            val prepare = AndroidVpnService.prepare(act)
-            if (prepare == null) {
-                vpnImpl.startPrepared(act, config, fallIntoRecovery)
-            } else {
-                pendingConfig = config
-                pendingFallIntoRecovery = fallIntoRecovery
-                act.startActivityForResult(prepare, REQ_VPN_PREPARE)
-            }
-        } else {
-            val prepare = AndroidVpnService.prepare(appContext)
-            if (prepare == null) {
-                vpnImpl.startPrepared(appContext, config, fallIntoRecovery)
-            }
-        }
-    }
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) { activity = binding.activity }
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) { activity = binding.activity }
+    override fun onDetachedFromActivityForConfigChanges() { activity = null }
+    override fun onDetachedFromActivity() { activity = null }
 
-    override fun stop() {
-        vpnImpl.stop()
-    }
-
-    override fun updateConfiguration(config: String?) {
-        // Do nothing, this is iOS/macOS specific
-    }
-
-    override fun getCurrentState(): VpnManagerState {
-        return vpnImpl.getCurrentState()
-    }
-
-    override fun exportLogs(): List<String> {
-        return vpnImpl.exportLogs()
-    }
-
-    override fun clearLogs() {
-        vpnImpl.clearLogs()
-    }
+    override fun start(config: String, fallIntoRecovery: Boolean) = vpn.startFromApp(config, fallIntoRecovery, activity)
+    override fun stop() = vpn.stop()
+    override fun updateConfiguration(config: String?) = Unit
+    override fun getCurrentState(): VpnManagerState = vpn.getCurrentState()
+    override fun exportLogs(): List<String> = vpn.exportLogs()
+    override fun clearLogs() = vpn.clearLogs()
 }

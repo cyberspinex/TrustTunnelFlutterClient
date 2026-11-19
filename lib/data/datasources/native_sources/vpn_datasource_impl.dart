@@ -3,11 +3,8 @@ import 'dart:async';
 import 'package:adguard_logger/adguard_logger.dart';
 import 'package:trusttunnel/common/extensions/model_extensions.dart';
 import 'package:trusttunnel/common/logging/extensions/vpn_logger_extension.dart';
-import 'package:trusttunnel/common/utils/server_endpoint_encoder.dart';
-import 'package:trusttunnel/common/utils/validation_utils.dart';
-import 'package:trusttunnel/common/utils/vpn_mode_encoder.dart';
+import 'package:trusttunnel/common/utils/vpn_config_builder.dart';
 import 'package:trusttunnel/data/datasources/vpn_datasource.dart';
-import 'package:trusttunnel/data/model/routing_mode.dart';
 import 'package:trusttunnel/data/model/routing_profile_data.dart';
 import 'package:trusttunnel/data/model/server_data.dart';
 import 'package:trusttunnel/data/model/vpn_configuration_log_level.dart';
@@ -15,12 +12,7 @@ import 'package:trusttunnel/data/model/vpn_log.dart';
 import 'package:trusttunnel/data/model/vpn_logging_payload.dart';
 import 'package:trusttunnel/data/model/vpn_state.dart';
 import 'package:trusttunnel/feature/vpn/domain/services/vpn_log_converter.dart';
-import 'package:vpn_plugin/models/configuration.dart';
-import 'package:vpn_plugin/models/configuration_log_level.dart';
-import 'package:vpn_plugin/models/endpoint.dart';
 import 'package:vpn_plugin/models/query_log_row.dart';
-import 'package:vpn_plugin/models/socks.dart';
-import 'package:vpn_plugin/models/tun.dart';
 import 'package:vpn_plugin/platform_api.g.dart' as p;
 import 'package:vpn_plugin/vpn_plugin.dart';
 
@@ -102,20 +94,13 @@ class VpnDataSourceImpl implements VpnDataSource {
     required VpnConfigurationLogLevel logLevel,
     bool fallIntoRecovery = false,
   }) async {
-    final endPoint = _createEndpoint(server, routingProfile);
-
     Future<void> command() => _platformApi.start(
       fallIntoRecovery: fallIntoRecovery,
-      configuration: Configuration(
-        logLevel: _convertLogLevel(logLevel),
-        vpnMode: VpnModeEncoder().convert(
-          routingProfile.defaultMode,
-        ),
-        endpoint: endPoint,
-        tun: Tun(
-          excludedRoutes: excludedRoutes,
-        ),
-        socks: const Socks(),
+      configuration: buildVpnConfig(
+        server: server,
+        routingProfile: routingProfile,
+        excludedRoutes: excludedRoutes,
+        logLevel: logLevel,
       ),
     );
 
@@ -161,19 +146,12 @@ class VpnDataSourceImpl implements VpnDataSource {
     required List<String> excludedRoutes,
     required VpnConfigurationLogLevel logLevel,
   }) async {
-    final endPoint = _createEndpoint(server, routingProfile);
-
     Future<void> command() => _platformApi.updateConfiguration(
-      configuration: Configuration(
-        logLevel: _convertLogLevel(logLevel),
-        vpnMode: VpnModeEncoder().convert(
-          routingProfile.defaultMode,
-        ),
-        endpoint: endPoint,
-        tun: Tun(
-          excludedRoutes: excludedRoutes,
-        ),
-        socks: const Socks(),
+      configuration: buildVpnConfig(
+        server: server,
+        routingProfile: routingProfile,
+        excludedRoutes: excludedRoutes,
+        logLevel: logLevel,
       ),
     );
 
@@ -201,51 +179,4 @@ class VpnDataSourceImpl implements VpnDataSource {
         () => _platformApi.updateConfiguration(configuration: null),
       ) ??
       _platformApi.updateConfiguration(configuration: null);
-
-  Endpoint _createEndpoint(ServerData server, RoutingProfileData routingProfile) =>
-      ServerEndpointEncoder(exclusions: _getExclusionsByMode(routingProfile)).convert(server);
-
-  /// Computes the effective exclusion list based on routing mode.
-  ///
-  /// Domains are normalized to include wildcard variants when appropriate.
-  List<String> _getExclusionsByMode(RoutingProfileData profile) {
-    final List<String> exclusions;
-
-    switch (profile.defaultMode) {
-      case RoutingMode.bypass:
-        exclusions = profile.vpnRules;
-      case RoutingMode.vpn:
-        exclusions = profile.bypassRules;
-    }
-
-    const wildCard = '*.';
-    final Set<String> parsedDomains = {};
-    final Set<String> parsedAddresses = {};
-
-    for (final exclusion in exclusions) {
-      final domainValue = ValidationUtils.tryParseDomain(exclusion, allowFirstLevel: true);
-
-      if (domainValue == null) {
-        parsedAddresses.add(exclusion);
-
-        continue;
-      }
-
-      parsedDomains.add(domainValue);
-      if (!domainValue.startsWith(wildCard)) {
-        parsedDomains.add('$wildCard$domainValue');
-      }
-    }
-
-    return {
-      ...parsedAddresses,
-      ...parsedDomains,
-    }.toList();
-  }
-
-  ConfigurationLogLevel _convertLogLevel(VpnConfigurationLogLevel logLevel) => switch (logLevel) {
-    VpnConfigurationLogLevel.error => ConfigurationLogLevel.error,
-    VpnConfigurationLogLevel.info => ConfigurationLogLevel.info,
-    VpnConfigurationLogLevel.debug => ConfigurationLogLevel.debug,
-  };
 }

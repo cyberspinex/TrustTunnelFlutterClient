@@ -134,22 +134,19 @@ class RoutingDataSourceImpl implements RoutingDataSource {
   /// Existing rules for the `[profileId, mode]` pair are deleted first, then the
   /// new list is inserted in a batch.
   @override
-  Future<void> setRules({required String id, required RoutingMode mode, required List<String> rules}) async {
-    await _database.profileRules.deleteWhere((p) => p.profileId.equals(int.parse(id)) & p.mode.equals(mode.value));
+  Future<void> setRules({required String id, required RoutingMode mode, required List<String> rules}) =>
+      _database.transaction(() async {
+        await _database.profileRules.deleteWhere((p) => p.profileId.equals(int.parse(id)) & p.mode.equals(mode.value));
 
-    return _database.batch((batch) {
-      batch.insertAllOnConflictUpdate(
-        _database.profileRules,
-        rules.map(
-          (data) => db.ProfileRulesCompanion.insert(
-            profileId: int.parse(id),
-            mode: mode.value,
-            data: data,
-          ),
-        ),
-      );
-    });
-  }
+        return _database.batch((batch) {
+          batch.insertAllOnConflictUpdate(
+            _database.profileRules,
+            rules.map(
+              (data) => db.ProfileRulesCompanion.insert(profileId: int.parse(id), mode: mode.value, data: data),
+            ),
+          );
+        });
+      });
 
   /// {@macro routing_data_source_remove_all_rules}
   @override

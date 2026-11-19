@@ -8,10 +8,11 @@ on:
         required: true
         type: string
   push:
-    branches: [android/dark-theme]
+    branches: [android/dark-theme, android/quick-settings]
     paths:
       - .github/scripts/boot-theme-emulator.sh
       - .github/scripts/android-theme-smoke.py
+      - .github/scripts/android-tile-smoke.py
       - .github/workflows/android-theme-emulator.yml
 
 permissions:
@@ -39,18 +40,18 @@ jobs:
             run="$SIGNED_RUN"
           else
             if git cat-file -e "$PREVIOUS^{commit}" 2>/dev/null && ! git diff --quiet "$PREVIOUS" HEAD -- . \
-              ':(exclude).github/workflows/android-theme-emulator.yml' ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py'; then
+              ':(exclude).github/workflows/android-theme-emulator.yml' ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py' ':(exclude).github/scripts/android-tile-smoke.py'; then
               echo "The application build workflow will test its newly signed APK"
               exit 0
             fi
             gh api --method GET "repos/$GITHUB_REPOSITORY/actions/artifacts" \
               -f name=TrustTunnel-NAVQS-arm64 -f per_page=100 \
-              --jq '.artifacts[] | select(.expired == false and .workflow_run.head_branch == "android/dark-theme") | [.workflow_run.id, .workflow_run.head_sha] | @tsv' > "$RUNNER_TEMP/candidates"
+              --jq '.artifacts[] | select(.expired == false and .workflow_run.head_branch == env.GITHUB_REF_NAME) | [.workflow_run.id, .workflow_run.head_sha] | @tsv' > "$RUNNER_TEMP/candidates"
             run=''
             while read -r candidate revision; do
               if git cat-file -e "$revision^{commit}" && git diff --quiet "$revision" HEAD -- . \
                 ':(exclude).github/workflows/android-control.yml' ':(exclude).github/workflows/android-theme-emulator.yml' \
-                ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py'; then
+                ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py' ':(exclude).github/scripts/android-tile-smoke.py'; then
                 run="$candidate"
                 break
               fi

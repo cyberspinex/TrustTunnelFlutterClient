@@ -10,6 +10,7 @@ import 'package:trusttunnel/common/logging/extensions/vpn_logger_extension.dart'
 import 'package:trusttunnel/di/model/initialization_helper.dart';
 import 'package:trusttunnel/di/widgets/dependency_scope.dart';
 import 'package:trusttunnel/feature/app/app.dart';
+import 'package:trusttunnel/feature/vpn/android/tile_profile.dart';
 import 'package:trusttunnel/feature/app/controller/windows_app_window_controller.dart';
 import 'package:trusttunnel/feature/deep_link/deep_link_scope.dart';
 import 'package:trusttunnel/feature/routing/routing/widgets/scope/routing_scope.dart';
@@ -97,3 +98,6 @@ void _applyGlobalErrorHandling(void Function(Object error, StackTrace? stackTrac
     return true;
   };
 }
+
+@pragma('vm:entry-point')
+Future<void> quickSettingsProfileMain() => sendQuickSettingsProfile();

@@ -28,14 +28,8 @@ class SettingsDataSourceImpl implements SettingsDataSource {
   /// The stored list is replaced atomically from the perspective of this method:
   /// all existing rows are removed, then the new set is inserted.
   @override
-  Future<void> setExcludedRoutes(List<String> routes) async {
+  Future<void> setExcludedRoutes(List<String> routes) => database.transaction(() async {
     await database.excludedRoutes.deleteAll();
-    await database.excludedRoutes.insertAll(
-      routes.map(
-        (e) => db.ExcludedRoutesCompanion.insert(
-          value: e,
-        ),
-      ),
-    );
-  }
+    await database.excludedRoutes.insertAll(routes.map((e) => db.ExcludedRoutesCompanion.insert(value: e)));
+  });
 }
