@@ -25,6 +25,10 @@ def start():
 def check_surface(name, color, evidence):
     deadline = time.monotonic() + 65
     while time.monotonic() < deadline:
+        activities = adb("shell", "dumpsys", "activity", "activities").decode(errors="replace")
+        if not any(PACKAGE + "/" in line and "ResumedActivity" in line for line in activities.splitlines()):
+            time.sleep(1)
+            continue
         raw = adb("exec-out", "screencap")
         if len(raw) > 16:
             width, height, pixel_format = struct.unpack_from("<III", raw)
@@ -68,7 +72,10 @@ def main():
     args = parser.parse_args()
     args.evidence.mkdir(parents=True, exist_ok=True)
     print("Device ABIs:", adb("shell", "getprop", "ro.product.cpu.abilist").decode().strip(), flush=True)
-    adb("install", str(args.apk))
+    installed = subprocess.check_output(["adb", "install", str(args.apk)], timeout=120)
+    print(installed.decode().strip(), flush=True)
+    package = adb("shell", "dumpsys", "package", PACKAGE).decode()
+    print(next(line.strip() for line in package.splitlines() if "versionCode=" in line), flush=True)
     adb("shell", "cmd", "uimode", "night", "no")
     start()
     check_surface("01-first-launch-light", LIGHT, args.evidence)
@@ -88,10 +95,16 @@ def main():
     check_surface("04-system-light", LIGHT, args.evidence)
     adb("shell", "cmd", "uimode", "night", "yes")
     check_surface("05-system-dark-foreground", DARK, args.evidence)
+    tap("Theme")
+    tap("Light")
+    check_surface("06-manual-light-while-system-dark", LIGHT, args.evidence)
+    tap("Theme")
+    tap("System")
+    check_surface("07-system-dark-restored", DARK, args.evidence)
     adb("shell", "input", "keyevent", "KEYCODE_HOME")
     adb("shell", "cmd", "uimode", "night", "no")
     start()
-    check_surface("06-system-light-after-resume", LIGHT, args.evidence)
+    check_surface("08-system-light-after-resume", LIGHT, args.evidence)
 
 
 if __name__ == "__main__":
