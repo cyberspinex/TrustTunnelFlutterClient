@@ -1,0 +1,80 @@
+name: TrustTunnel NAVQS theme on Android 15
+
+on:
+  workflow_call:
+    inputs:
+      signed_run:
+        description: Run that signed the APK for this source revision
+        required: true
+        type: string
+  push:
+    branches: [android/dark-theme]
+    paths:
+      - .github/scripts/boot-theme-emulator.sh
+      - .github/scripts/android-theme-smoke.py
+      - .github/workflows/android-theme-emulator.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  emulator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Locate the signed APK produced from the same application source
+        id: source
+        env:
+          PREVIOUS: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
+          SIGNED_RUN: ${{ inputs.signed_run }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$SIGNED_RUN" ]]; then
+            run="$SIGNED_RUN"
+          else
+            if git cat-file -e "$PREVIOUS^{commit}" 2>/dev/null && ! git diff --quiet "$PREVIOUS" HEAD -- . \
+              ':(exclude).github/workflows/android-theme-emulator.yml' ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py'; then
+              echo "The application build workflow will test its newly signed APK"
+              exit 0
+            fi
+            gh api --method GET "repos/$GITHUB_REPOSITORY/actions/artifacts" \
+              -f name=TrustTunnel-NAVQS-arm64 -f per_page=100 \
+              --jq '.artifacts[] | select(.expired == false and .workflow_run.head_branch == "android/dark-theme") | [.workflow_run.id, .workflow_run.head_sha] | @tsv' > "$RUNNER_TEMP/candidates"
+            run=''
+            while read -r candidate revision; do
+              if git cat-file -e "$revision^{commit}" && git diff --quiet "$revision" HEAD -- . \
+                ':(exclude).github/workflows/android-control.yml' ':(exclude).github/workflows/android-theme-emulator.yml' \
+                ':(exclude).github/scripts/boot-theme-emulator.sh' ':(exclude).github/scripts/android-theme-smoke.py'; then
+                run="$candidate"
+                break
+              fi
+            done < "$RUNNER_TEMP/candidates"
+            [[ -n "$run" ]] || { echo "No signed artifact matches this application source"; exit 1; }
+          fi
+          echo "Testing the signed artifact from run $run"
+          echo "id=$run" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: steps.source.outputs.id != ''
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.source.outputs.id }}
+          name: TrustTunnel-NAVQS-arm64
+          path: signed
+      - name: Check APK digest and run the installed application on Android 15
+        if: steps.source.outputs.id != ''
+        run: |
+          (cd signed && sha256sum -c SHA256SUMS)
+          bash .github/scripts/boot-theme-emulator.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: android-theme-screens-api35
+          path: theme-screens
+          if-no-files-found: ignore
+          retention-days: 7
