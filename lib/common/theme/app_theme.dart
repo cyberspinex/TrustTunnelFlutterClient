@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trusttunnel/common/assets/asset_icons.dart';
@@ -5,53 +6,61 @@ import 'package:trusttunnel/common/assets/font_families.dart';
 import 'package:trusttunnel/common/extensions/theme_extensions.dart';
 import 'package:trusttunnel/widgets/custom_icon.dart';
 
-class LightTheme {
-  static const _accent = Color(0xFF3972AA);
-  static const _accentHover = Color(0xFF336699);
-  static const _accentPressed = Color(0xFF2D5986);
-  static const _accentDisabled = Color(0x664F8AC4);
+class AppTheme {
+  AppTheme(this.brightness);
 
-  static const _accentAdditional = Color(0xFF4F8AC4);
+  final Brightness brightness;
 
-  static const _blend = Color(0x334F8AC4);
-  static const _blendHover = Color(0x4D4F8AC4);
-  static const _blendPressed = Color(0x664F8AC4);
-  static const _attention = Color(0xFFF08400);
-  static const _attentionHover = Color(0xFFE07400);
-  static const _attentionPressed = Color(0xFFC76300);
-  static const _attentionDisabled = Color(0x80FFA424);
-  static const _error = Color(0xFFF44725);
-  static const _errorHover = Color(0xFFE7320D);
-  static const _errorPressed = Color(0xFFD02C0B);
-  static const _errorDisabled = Color(0x80F56447);
-  static const _background = Color(0xFFFFFFFF);
-  static const _backgroundHover = Color(0xFFF6F7F9);
-  static const _backgroundPressed = Color(0xFFE6EAEF);
+  Color _color(int light, int dark) => Color(brightness == Brightness.dark ? dark : light);
 
-  static const _neutralBlend = Color(0x1A30353B);
+  // Each pair is the same role in light and dark mode.
 
-  static const _backgroundAdditional = Color(0xFFF6F7F9);
-  static const _backgroundElevated = Color(0xFFFFFFFF);
-  static const _backgroundSystem = Color(0xFFE6EAEF);
-  static const _backgroundSystemHover = Color(0xFFD1D8E0);
-  static const _backgroundSystemPressed = Color(0xFFBFC8D4);
-  static const _neutralLight = Color(0xFF9AA8B8);
-  static const _neutralLightHover = Color(0xFF8997A9);
-  static const _neutralLightPressed = Color(0xFF74869C);
-  static const _neutralLightDisabled = Color(0x3330353B);
-  static const _neutralDark = Color(0xFF74869C);
-  static const _neutralDarkHover = Color(0xFF5C6E84);
-  static const _neutralDarkPressed = Color(0xFF465567);
-  static const _neutralDarkDisabled = Color(0x4D30353B);
-  static const _neutralBlack = Color(0xFF333E4C);
-  static const _neutralBlackHover = Color(0xFF242D38);
-  static const _neutralBlackPressed = Color(0xFF1A2028);
-  static const _neutralBlackDisabled = Color(0x6630353B);
+  late final _accent = _color(0xFF3972AA, 0xFF8CC9FF);
+  late final _accentHover = _color(0xFF336699, 0xFFA9D7FF);
+  late final _accentPressed = _color(0xFF2D5986, 0xFF6DB7F4);
+  late final _accentDisabled = _color(0x664F8AC4, 0x668CC9FF);
+
+  late final _accentAdditional = _color(0xFF4F8AC4, 0xFF194969);
+
+  late final _blend = _color(0x334F8AC4, 0x348CC9FF);
+  late final _blendHover = _color(0x4D4F8AC4, 0x508CC9FF);
+  late final _blendPressed = _color(0x664F8AC4, 0x668CC9FF);
+  late final _attention = _color(0xFFF08400, 0xFFFFC271);
+  late final _attentionHover = _color(0xFFE07400, 0xFFFFD39A);
+  late final _attentionPressed = _color(0xFFC76300, 0xFFF6B45C);
+  late final _attentionDisabled = _color(0x80FFA424, 0x80FFC271);
+  late final _error = _color(0xFFF44725, 0xFFFFA99B);
+  late final _errorHover = _color(0xFFE7320D, 0xFFFFC0B4);
+  late final _errorPressed = _color(0xFFD02C0B, 0xFFF99484);
+  late final _errorDisabled = _color(0x80F56447, 0x80FFA99B);
+  late final _background = _color(0xFFFFFFFF, 0xFF10161D);
+  late final _backgroundHover = _color(0xFFF6F7F9, 0xFF23313E);
+  late final _backgroundPressed = _color(0xFFE6EAEF, 0xFF2B3A49);
+
+  late final _neutralBlend = _color(0x1A30353B, 0x33C1D2E1);
+
+  late final _backgroundAdditional = _color(0xFFF6F7F9, 0xFF19232D);
+  late final _backgroundElevated = _color(0xFFFFFFFF, 0xFF202D39);
+  late final _backgroundSystem = _color(0xFFE6EAEF, 0xFF1B2733);
+  late final _backgroundSystemHover = _color(0xFFD1D8E0, 0xFF2A3948);
+  late final _backgroundSystemPressed = _color(0xFFBFC8D4, 0xFF334558);
+  late final _neutralLight = _color(0xFF9AA8B8, 0xFFB0C1D2);
+  late final _neutralLightHover = _color(0xFF8997A9, 0xFFC1CFDD);
+  late final _neutralLightPressed = _color(0xFF74869C, 0xFFCDD9E5);
+  late final _neutralLightDisabled = _color(0x3330353B, 0x47B0C1D2);
+  late final _neutralDark = _color(0xFF74869C, 0xFFA9BDD0);
+  late final _neutralDarkHover = _color(0xFF5C6E84, 0xFFBBCDDE);
+  late final _neutralDarkPressed = _color(0xFF465567, 0xFFCFDDEA);
+  late final _neutralDarkDisabled = _color(0x4D30353B, 0x61A9BDD0);
+  late final _neutralBlack = _color(0xFF333E4C, 0xFFEAF1F7);
+  late final _neutralBlackHover = _color(0xFF242D38, 0xFFF4F8FB);
+  late final _neutralBlackPressed = _color(0xFF1A2028, 0xFFFFFFFF);
+  late final _neutralBlackDisabled = _color(0x6630353B, 0x66EAF1F7);
   static const _specialStaticWhite = Color(0xFFFFFFFF);
   static const _specialStaticWhiteHover = Color(0xFFF6F7F9);
   static const _specialStaticWhitePressed = Color(0xFFE6EAEF);
   static const _specialStaticWhiteDisabled = Color(0x80FFFFFF);
-  static const _dumInputDecorationIdleColor = Color(0xFF73859D);
+  late final _dumInputDecorationIdleColor = _color(0xFF73859D, 0xFFB0C1D2);
 
   // System colors
   static const _transparent = Colors.transparent;
@@ -69,48 +78,53 @@ class LightTheme {
   static const _windowsSystemTitleBarButtonBackgroundPressed = Color(0x29000000);
 
   // Legacy colors
-  static const _primary1 = Color(0xFF67B279);
-  static const _primary2 = Color(0xFF5B9F6B);
-  static const _primary3 = Color(0xFF4E8C5D);
-  static const _primary4 = Color(0xFFA2D0AD);
-  static const _blend1 = Color(0xFFD9ECDE);
-  static const _blend2 = Color(0xFFBEDFC6);
-  static const _blend3 = Color(0xFFA2D0AD);
-  static const _orange1 = Color(0xFFD58500);
-  static const _orange2 = Color(0xFFC77901);
-  static const _orange3 = Color(0xFFB76C01);
-  static const _orange4 = Color(0xFFE5B460);
-  static const _red1 = Color(0xFFE9653A);
-  static const _red2 = Color(0xFFE75727);
-  static const _red3 = Color(0xFFDC4918);
-  static const _red4 = Color(0xFFEF9071);
-  static const _background1 = Color(0xFFFFFFFF);
-  static const _background2 = Color(0xFFF6F6F6);
-  static const _background3 = Color(0xFFE4E4E4);
-  static const _gray1 = Color(0xFFA4A4A4);
-  static const _gray2 = Color(0xFF7F7F7F);
-  static const _gray3 = Color(0xFF5B5B5B);
-  static const _gray4 = Color(0xFFE4E4E4);
-  static const _contrast1 = Color(0xFF3D3D3D);
-  static const _contrast2 = Color(0xFF5B5B5B);
-  static const _contrast3 = Color(0xFF7F7F7F);
-  static const _contrast4 = Color(0xFFA4A4A4);
+  late final _primary1 = _color(0xFF67B279, 0xFF8BD5A1);
+  late final _primary2 = _color(0xFF5B9F6B, 0xFF9FDDB1);
+  late final _primary3 = _color(0xFF4E8C5D, 0xFFB2E8C2);
+  late final _primary4 = _color(0xFFA2D0AD, 0xFF69BA84);
+  late final _blend1 = _color(0xFFD9ECDE, 0xFF183527);
+  late final _blend2 = _color(0xFFBEDFC6, 0xFF224733);
+  late final _blend3 = _color(0xFFA2D0AD, 0xFF2F5940);
+  late final _orange1 = _color(0xFFD58500, 0xFFFFC271);
+  late final _orange2 = _color(0xFFC77901, 0xFFFFD39A);
+  late final _orange3 = _color(0xFFB76C01, 0xFFF6B45C);
+  late final _orange4 = _color(0xFFE5B460, 0xFFDDA65D);
+  late final _red1 = _color(0xFFE9653A, 0xFFFFA99B);
+  late final _red2 = _color(0xFFE75727, 0xFFFFC0B4);
+  late final _red3 = _color(0xFFDC4918, 0xFFF99484);
+  late final _red4 = _color(0xFFEF9071, 0xFFE6A194);
+  late final _background1 = _color(0xFFFFFFFF, 0xFF10161D);
+  late final _background2 = _color(0xFFF6F6F6, 0xFF19232D);
+  late final _background3 = _color(0xFFE4E4E4, 0xFF2B3A49);
+  late final _gray1 = _color(0xFFA4A4A4, 0xFFB0C1D2);
+  late final _gray2 = _color(0xFF7F7F7F, 0xFFA9BDD0);
+  late final _gray3 = _color(0xFF5B5B5B, 0xFFCAD7E3);
+  late final _gray4 = _color(0xFFE4E4E4, 0xFF334558);
+  late final _contrast1 = _color(0xFF3D3D3D, 0xFFEAF1F7);
+  late final _contrast2 = _color(0xFF5B5B5B, 0xFFD2DEE9);
+  late final _contrast3 = _color(0xFF7F7F7F, 0xFFBACBDD);
+  late final _contrast4 = _color(0xFFA4A4A4, 0xFFA9BDCF);
   static const _staticBlack1 = Color(0xFF0A0A0A);
   static const _staticBlack2 = Color(0xFF1F1F1F);
   static const _staticBlack3 = Color(0xFF3D3D3D);
   static const _staticWhite = Color(0xFFF6F6F6);
-  static const _purple1 = Color(0xFFA870B2);
-  static const _purple2 = Color(0xFF9F61AA);
-  static const _purple3 = Color(0xFF92549C);
-  static const _purple4 = Color(0xFFC096C7);
+  late final _purple1 = _color(0xFFA870B2, 0xFFDFB0EB);
+  late final _purple2 = _color(0xFF9F61AA, 0xFFE8C4F1);
+  late final _purple3 = _color(0xFF92549C, 0xFFD49CE4);
+  late final _purple4 = _color(0xFFC096C7, 0xFFC59FD6);
 
   // New colors (Colors and styles Library)
-  static const _accentMainDefault = Color(0xFF3972AA);
+  late final _accentMainDefault = _color(0xFF3972AA, 0xFF8CC9FF);
 
-  late final appSystemUiOverlayStyle = const SystemUiOverlayStyle(
+  late final _onEmphasis = _color(0xFFFFFFFF, 0xFF102336);
+  late final _barIcons = brightness == Brightness.dark ? Brightness.light : Brightness.dark;
+
+  late final appSystemUiOverlayStyle = SystemUiOverlayStyle(
     statusBarColor: _background,
-    statusBarIconBrightness: Brightness.dark,
-    statusBarBrightness: Brightness.light,
+    statusBarIconBrightness: _barIcons,
+    statusBarBrightness: brightness,
+    systemNavigationBarColor: defaultTargetPlatform == TargetPlatform.android ? _backgroundSystem : null,
+    systemNavigationBarIconBrightness: defaultTargetPlatform == TargetPlatform.android ? _barIcons : null,
     systemStatusBarContrastEnforced: false,
   );
 
@@ -127,7 +141,7 @@ class LightTheme {
     radius: const Radius.circular(100),
   );
 
-  late final _customColors = const CustomColors(
+  late final _customColors = CustomColors(
     accent: _accent,
     accentHover: _accentHover,
     accentPressed: _accentPressed,
@@ -215,6 +229,7 @@ class LightTheme {
 
   late final _colorScheme = ColorScheme.fromSeed(
     seedColor: _accent,
+    brightness: brightness,
   );
 
   late final _checkboxThemeData = CheckboxThemeData(
@@ -226,14 +241,14 @@ class LightTheme {
         return null;
       },
     ),
-    checkColor: WidgetStateProperty.all(_specialStaticWhite),
+    checkColor: WidgetStateProperty.all(_onEmphasis),
     side: WidgetStateBorderSide.resolveWith(
       (states) {
         if (!states.contains(WidgetState.selected) && !states.contains(WidgetState.disabled)) {
-          return const BorderSide(width: 2, color: _neutralLight);
+          return BorderSide(width: 2, color: _neutralLight);
         }
         if (!states.contains(WidgetState.selected) && states.contains(WidgetState.disabled)) {
-          return const BorderSide(width: 2, color: _neutralLightDisabled);
+          return BorderSide(width: 2, color: _neutralLightDisabled);
         }
 
         return null;
@@ -264,9 +279,7 @@ class LightTheme {
           ),
         ),
       ),
-      foregroundColor: const WidgetStatePropertyAll(
-        _specialStaticWhite,
-      ),
+      foregroundColor: WidgetStatePropertyAll(brightness == Brightness.dark ? _neutralBlack : _specialStaticWhite),
       overlayColor: WidgetStateProperty.resolveWith(
         (states) {
           if (states.contains(WidgetState.pressed) || states.contains(WidgetState.focused)) return _backgroundHover;
@@ -310,8 +323,8 @@ class LightTheme {
 
   late final _floatingActionButtonThemeData = FloatingActionButtonThemeData(
     backgroundColor: _accent,
-    extendedTextStyle: _textTheme.labelLarge?.copyWith(color: _specialStaticWhite),
-    foregroundColor: _specialStaticWhite,
+    extendedTextStyle: _textTheme.labelLarge?.copyWith(color: _onEmphasis),
+    foregroundColor: _onEmphasis,
     iconSize: 24,
     extendedSizeConstraints: const BoxConstraints(minHeight: 56),
     smallSizeConstraints: const BoxConstraints(minHeight: 40, minWidth: 40),
@@ -340,7 +353,7 @@ class LightTheme {
     ),
     thumbColor: WidgetStateProperty.resolveWith(
       (states) {
-        if (states.contains(WidgetState.selected)) return _staticWhite;
+        if (states.contains(WidgetState.selected)) return brightness == Brightness.dark ? _onEmphasis : _staticWhite;
         if (states.contains(WidgetState.disabled)) return _contrast4;
 
         return _contrast1;
@@ -372,13 +385,13 @@ class LightTheme {
     ),
     behavior: SnackBarBehavior.floating,
     elevation: 3,
-    contentTextStyle: _textTheme.bodyMedium?.copyWith(color: _specialStaticWhite),
+    contentTextStyle: _textTheme.bodyMedium?.copyWith(color: _onEmphasis),
     actionTextColor: _accentAdditional,
-    closeIconColor: _specialStaticWhite,
+    closeIconColor: _onEmphasis,
   );
 
   late final _badgeThemeData = BadgeThemeData(
-    textColor: _specialStaticWhite,
+    textColor: _onEmphasis,
     textStyle: _textTheme.labelSmall,
     backgroundColor: _error,
     smallSize: 6,
@@ -553,7 +566,7 @@ class LightTheme {
           return _accent;
         },
       ),
-      foregroundColor: const WidgetStatePropertyAll(_specialStaticWhite),
+      foregroundColor: WidgetStatePropertyAll(_onEmphasis),
       overlayColor: WidgetStateProperty.resolveWith(
         (states) {
           if (states.contains(WidgetState.pressed)) return _accentPressed;
@@ -651,7 +664,7 @@ class LightTheme {
     foregroundColor: _neutralBlack,
   );
 
-  late final _navigationBarThemeData = const NavigationBarThemeData(
+  late final _navigationBarThemeData = NavigationBarThemeData(
     backgroundColor: _backgroundSystem,
     indicatorColor: _blendHover,
   );
@@ -691,7 +704,7 @@ class LightTheme {
     ),
   );
 
-  late final _menuBarThemeData = const MenuBarThemeData(
+  late final _menuBarThemeData = MenuBarThemeData(
     style: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(_background),
       surfaceTintColor: WidgetStatePropertyAll(_transparent),
@@ -701,7 +714,7 @@ class LightTheme {
   late final _dropdownMenuThemeData = DropdownMenuThemeData(
     textStyle: _textTheme.bodyLarge,
     inputDecorationTheme: _inputDecorationTheme,
-    menuStyle: const MenuStyle(
+    menuStyle: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(_background),
       surfaceTintColor: WidgetStatePropertyAll(_transparent),
       visualDensity: VisualDensity.standard,
@@ -711,7 +724,7 @@ class LightTheme {
     ),
   );
 
-  late final _menuThemeData = const MenuThemeData(
+  late final _menuThemeData = MenuThemeData(
     style: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(_background),
       surfaceTintColor: WidgetStatePropertyAll(_transparent),
@@ -734,27 +747,27 @@ class LightTheme {
         ),
       ),
     ),
-    errorBorder: const OutlineInputBorder(
+    errorBorder: OutlineInputBorder(
       borderSide: BorderSide(color: _error),
     ),
-    enabledBorder: const OutlineInputBorder(
+    enabledBorder: OutlineInputBorder(
       borderSide: BorderSide(
         color: _dumInputDecorationIdleColor,
       ),
     ),
-    focusedBorder: const OutlineInputBorder(
+    focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
         color: _neutralDark,
         width: 3,
       ),
     ),
-    focusedErrorBorder: const OutlineInputBorder(
+    focusedErrorBorder: OutlineInputBorder(
       borderSide: BorderSide(color: _error, width: 3),
     ),
-    outlineBorder: const BorderSide(
+    outlineBorder: BorderSide(
       color: _dumInputDecorationIdleColor,
     ),
-    border: const OutlineInputBorder(
+    border: OutlineInputBorder(
       borderSide: BorderSide(
         color: _dumInputDecorationIdleColor,
       ),
@@ -857,12 +870,12 @@ class LightTheme {
     selectionHandleColor: _accent,
   );
 
-  late final _dividerThemeData = const DividerThemeData(
+  late final _dividerThemeData = DividerThemeData(
     color: _neutralBlend,
     space: 1,
   );
 
-  late final _iconThemeData = const IconThemeData(
+  late final _iconThemeData = IconThemeData(
     size: 24,
     color: _neutralBlack,
   );
@@ -926,7 +939,7 @@ class LightTheme {
     ),
   );
 
-  final _textTheme = const TextTheme(
+  late final _textTheme = TextTheme(
     displayLarge: TextStyle(
       fontWeight: FontWeight.w400,
       fontStyle: FontStyle.normal,
@@ -1078,10 +1091,10 @@ class LightTheme {
     height: 40,
   );
 
-  final _customFilledIconButtonTheme = CustomFilledIconButtonTheme(
+  late final _customFilledIconButtonTheme = CustomFilledIconButtonTheme(
     iconButton: IconButtonThemeData(
       style: ButtonStyle(
-        foregroundColor: const WidgetStatePropertyAll(_specialStaticWhite),
+        foregroundColor: WidgetStatePropertyAll(_onEmphasis),
         backgroundColor: WidgetStateProperty.resolveWith(
           (states) {
             if (states.contains(WidgetState.selected)) {
@@ -1095,7 +1108,7 @@ class LightTheme {
     ),
     iconButtonInProgress: IconButtonThemeData(
       style: ButtonStyle(
-        foregroundColor: const WidgetStatePropertyAll(_specialStaticWhite),
+        foregroundColor: WidgetStatePropertyAll(_onEmphasis),
         backgroundColor: WidgetStateProperty.resolveWith(
           (states) {
             if (states.contains(WidgetState.selected)) {
@@ -1109,7 +1122,7 @@ class LightTheme {
     ),
   );
 
-  final _customMissSpelledTextTheme = const CustomMissSpelledTextTheme(
+  late final _customMissSpelledTextTheme = CustomMissSpelledTextTheme(
     missSpelledStyle: TextStyle(
       decorationColor: _error,
       decoration: TextDecoration.underline,
@@ -1135,7 +1148,7 @@ class LightTheme {
 
     // COLOR
     scaffoldBackgroundColor: _background,
-    brightness: Brightness.light,
+    brightness: brightness,
     primaryColor: _accent,
     colorScheme: _colorScheme,
     hoverColor: _transparent,

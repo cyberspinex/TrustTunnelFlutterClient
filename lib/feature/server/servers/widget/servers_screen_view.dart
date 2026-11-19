@@ -192,10 +192,12 @@ class _ServersScreenViewState extends State<ServersScreenView> {
                   context.closeCurrentSnackBar();
                   _pushServerDetailsScreen(context, serverId: duplicate.id);
                 },
-                child: Text(
-                  context.ln.edit,
-                  style: context.textTheme.labelLarge?.copyWith(
-                    color: context.colors.specialStaticWhite,
+                child: Builder(
+                  builder: (context) => Text(
+                    context.ln.edit,
+                    style: context.textTheme.labelLarge?.copyWith(
+                      color: context.theme.snackBarTheme.contentTextStyle?.color,
+                    ),
                   ),
                 ),
               ),

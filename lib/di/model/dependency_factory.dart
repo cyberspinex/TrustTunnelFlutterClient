@@ -9,7 +9,8 @@ import 'package:trusttunnel/common/constants/app_constants.dart';
 import 'package:trusttunnel/common/constants/app_update_constants.dart';
 import 'package:trusttunnel/common/network/models/http_client_configuration.dart';
 import 'package:trusttunnel/common/network/network_client.dart';
-import 'package:trusttunnel/common/theme/light_theme.dart';
+import 'package:trusttunnel/common/theme/app_theme.dart';
+import 'package:trusttunnel/common/theme/theme_preference.dart';
 import 'package:trusttunnel/common/utils/certificate_encoders.dart';
 import 'package:trusttunnel/data/database/app_database.dart' as db;
 import 'package:trusttunnel/data/datasources/app_state_logging_datasource.dart';
@@ -66,6 +67,8 @@ abstract class DependencyFactory {
   NetworkClient get fileDownloadClient;
 
   ThemeData get lightThemeData;
+  ThemeData get darkThemeData;
+  ThemePreference get themePreference;
 
   VpnPlugin get vpnPlugin;
 
@@ -131,6 +134,10 @@ class DependencyFactoryImpl implements DependencyFactory {
   NetworkClient? _fileDownloadClient;
 
   ThemeData? _lightThemeData;
+  ThemeData? _darkThemeData;
+
+  @override
+  late final ThemePreference themePreference = ThemePreference(sharedPreferences);
 
   VpnPlugin? _vpnPlugin;
 
@@ -199,7 +206,10 @@ class DependencyFactoryImpl implements DependencyFactory {
   );
 
   @override
-  ThemeData get lightThemeData => _lightThemeData ??= LightTheme().data;
+  ThemeData get lightThemeData => _lightThemeData ??= AppTheme(Brightness.light).data;
+
+  @override
+  ThemeData get darkThemeData => _darkThemeData ??= AppTheme(Brightness.dark).data;
 
   @override
   VpnPlugin get vpnPlugin => _vpnPlugin ??= VpnPluginImpl();

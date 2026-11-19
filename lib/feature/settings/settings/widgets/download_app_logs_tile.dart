@@ -77,10 +77,12 @@ class _DownloadAppLogsTileState extends State<DownloadAppLogsTile> {
                   onUnavailable: () => context.showInfoSnackBar(message: context.ln.somethingWentWrongSnackbar),
                 );
               },
-              child: Text(
-                context.ln.share,
-                style: context.textTheme.labelLarge?.copyWith(
-                  color: context.theme.snackBarTheme.actionTextColor,
+              child: Builder(
+                builder: (context) => Text(
+                  context.ln.share,
+                  style: context.textTheme.labelLarge?.copyWith(
+                    color: context.theme.snackBarTheme.actionTextColor,
+                  ),
                 ),
               ),
             ),

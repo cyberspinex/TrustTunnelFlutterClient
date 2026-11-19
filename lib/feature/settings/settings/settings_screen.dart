@@ -12,6 +12,7 @@ import 'package:trusttunnel/feature/settings/launch_and_connection/widgets/launc
 import 'package:trusttunnel/feature/settings/launch_and_connection/widgets/scope/launch_and_connection_scope.dart';
 import 'package:trusttunnel/feature/settings/query_log/widgets/query_log_screen.dart';
 import 'package:trusttunnel/feature/settings/settings/widgets/download_app_logs_tile.dart';
+import 'package:trusttunnel/feature/settings/settings/widgets/theme_settings_tile.dart';
 import 'package:trusttunnel/widgets/common/custom_arrow_list_tile.dart';
 import 'package:trusttunnel/widgets/custom_app_bar.dart';
 import 'package:trusttunnel/widgets/scaffold_wrapper.dart';
@@ -35,6 +36,8 @@ class SettingsScreen extends StatelessWidget {
             _SettingsScreenSection(
               sectionTitle: context.ln.general,
               children: [
+                if (defaultTargetPlatform == TargetPlatform.android)
+                  ThemeSettingsTile(preference: context.dependencyFactory.themePreference),
                 if (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows)
                   CustomArrowListTile(
                     title: context.ln.launchAndConnection,

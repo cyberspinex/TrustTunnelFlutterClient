@@ -280,5 +280,13 @@
   },
   "updateAvailable": "Update available",
   "tryAgain": "Try again",
-  "general": "General"
+  "general": "General",
+  "themeSetting": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSaveFailed": "Could not save the theme. Please try again.",
+  "vpnWaitingForNetwork": "Waiting for network",
+  "vpnWaitingForRecovery": "Waiting to reconnect",
+  "vpnRecovering": "Reconnecting…"
 }
