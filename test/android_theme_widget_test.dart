@@ -27,12 +27,12 @@ import 'package:trusttunnel/di/model/repository_factory.dart';
 import 'package:trusttunnel/di/widgets/dependency_scope.dart';
 import 'package:trusttunnel/feature/app/app.dart';
 import 'package:trusttunnel/feature/routing/routing/widgets/scope/routing_scope.dart';
+import 'package:trusttunnel/feature/routing/routing_details/widgets/routing_details_screen_app_bar_action.dart';
 import 'package:trusttunnel/feature/server/servers/widget/scope/servers_scope.dart';
 import 'package:trusttunnel/feature/settings/app_logging/widgets/scope/app_logging_scope.dart';
 import 'package:trusttunnel/feature/settings/excluded_routes/widgets/scope/excluded_routes_scope.dart';
 import 'package:trusttunnel/feature/settings/settings/widgets/theme_settings_tile.dart';
 import 'package:trusttunnel/feature/vpn/widgets/vpn_scope.dart';
-import 'package:trusttunnel/feature/routing/routing_details/widgets/routing_details_screen_app_bar_action.dart';
 import 'package:trusttunnel/widgets/inputs/custom_text_field.dart';
 
 class _Dependencies extends Fake implements DependencyFactory {
@@ -49,8 +49,14 @@ class _Dependencies extends Fake implements DependencyFactory {
 
 // The real scopes and VPN controller read a local profile and routing rules.
 // Only storage and the native VPN transport are substituted.
-class _Repositories extends Fake implements RepositoryFactory, ServerRepository, RoutingRepository,
-    LoggingSettingsRepository, SettingsRepository, AutoConnectOnLaunchSettingsRepository {
+class _Repositories extends Fake
+    implements
+        RepositoryFactory,
+        ServerRepository,
+        RoutingRepository,
+        LoggingSettingsRepository,
+        SettingsRepository,
+        AutoConnectOnLaunchSettingsRepository {
   @override
   ServerRepository get serverRepository => this;
   @override
@@ -62,9 +68,16 @@ class _Repositories extends Fake implements RepositoryFactory, ServerRepository,
   @override
   AutoConnectOnLaunchSettingsRepository get autoConnectOnLaunchSettingsRepository => this;
   @override
-  Future<List<Server>> getAllServers() async => [Server(id: '1', serverData: const ServerData.empty(name: 'Local fixture', selected: true, routingProfileId: '2'))];
+  Future<List<Server>> getAllServers() async => [
+    Server(
+      id: '1',
+      serverData: const ServerData.empty(name: 'Local fixture', selected: true, routingProfileId: '2'),
+    ),
+  ];
   @override
-  Future<List<RoutingProfile>> getAllProfiles() async => [RoutingProfile(id: '2', data: const RoutingProfileData.empty())];
+  Future<List<RoutingProfile>> getAllProfiles() async => [
+    RoutingProfile(id: '2', data: const RoutingProfileData.empty()),
+  ];
   @override
   Future<List<String>> getExcludedRoutes() async => [];
   @override
@@ -84,17 +97,30 @@ class _NativeVpn extends Fake implements VpnRepository {
   @override
   Future<VpnState> requestState() async => state;
   @override
-  Future<void> start({required Server server, required RoutingProfile routingProfile, required List<String> excludedRoutes, required VpnConfigurationLogLevel logLevel, bool fallIntoRecovery = false}) async {
+  Future<void> start({
+    required Server server,
+    required RoutingProfile routingProfile,
+    required List<String> excludedRoutes,
+    required VpnConfigurationLogLevel logLevel,
+    bool fallIntoRecovery = false,
+  }) async {
     commands.add('start');
     states.add(state = VpnState.connected);
   }
+
   @override
   Future<void> stop() async {
     commands.add('stop');
     states.add(state = VpnState.disconnected);
   }
+
   @override
-  Future<void> updateConfiguration({required Server server, required RoutingProfile routingProfile, required List<String> excludedRoutes, required VpnConfigurationLogLevel logLevel}) async => commands.add('update');
+  Future<void> updateConfiguration({
+    required Server server,
+    required RoutingProfile routingProfile,
+    required List<String> excludedRoutes,
+    required VpnConfigurationLogLevel logLevel,
+  }) async => commands.add('update');
   @override
   Future<void> deleteConfiguration() async => commands.add('delete');
 }
@@ -106,39 +132,57 @@ class _Screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: ListView(children: [
-      ThemeSettingsTile(preference: context.dependencyFactory.themePreference),
-      TextButton(
-        child: const Text('Edit profile'),
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const _Editor()),
+    body: ListView(
+      children: [
+        ThemeSettingsTile(preference: context.dependencyFactory.themePreference),
+        TextButton(
+          child: const Text('Edit profile'),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const _Editor())),
         ),
-      ),
-    ]),
+      ],
+    ),
   );
 }
 
-class _Editor extends StatelessWidget {
+class _Editor extends StatefulWidget {
   const _Editor();
+
+  @override
+  State<_Editor> createState() => _EditorState();
+}
+
+class _EditorState extends State<_Editor> {
+  String normalizedValue = 'unsaved profile';
 
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    body: Column(children: [
-      CustomTextField(key: _field, value: 'unsaved profile', maxLines: 3),
-      RoutingDetailsScreenAppBarAction(
-        profileName: 'Test profile',
-        pickedRoutingMode: RoutingMode.vpn,
-        onClearRulesPressed: (_) {},
-        onDefaultModePicked: (_, _) {},
-      ),
-      TextButton(
-        child: const Text('Show dialog'),
-        onPressed: () => showDialog<void>(
-          context: context, builder: (_) => const AlertDialog(title: Text('Still open')),
+    body: Column(
+      children: [
+        CustomTextField(
+          key: _field,
+          value: normalizedValue,
+          maxLines: 3,
+          onChanged: (text) {
+            final trimmed = text.trim();
+            if (normalizedValue != trimmed) setState(() => normalizedValue = trimmed);
+          },
         ),
-      ),
-    ]),
+        RoutingDetailsScreenAppBarAction(
+          profileName: 'Test profile',
+          pickedRoutingMode: RoutingMode.vpn,
+          onClearRulesPressed: (_) {},
+          onDefaultModePicked: (_, _) {},
+        ),
+        TextButton(
+          child: const Text('Show dialog'),
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (_) => const AlertDialog(title: Text('Still open')),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -155,14 +199,25 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final deps = _Dependencies(await SharedPreferences.getInstance());
       final nativeVpn = _NativeVpn();
-      await tester.pumpWidget(DependencyScope(
-        dependenciesFactory: deps,
-        repositoryFactory: _Repositories(),
-        child: AppLoggingScope(child: RoutingScope(child: ExcludedRoutesScope(child: ServersScope(
-          child: VpnScope(vpnRepository: nativeVpn, appWindowControllerProvider: () => throw UnsupportedError('Android'),
-            child: const App(home: _Screen())),
-        )))),
-      ));
+      await tester.pumpWidget(
+        DependencyScope(
+          dependenciesFactory: deps,
+          repositoryFactory: _Repositories(),
+          child: AppLoggingScope(
+            child: RoutingScope(
+              child: ExcludedRoutesScope(
+                child: ServersScope(
+                  child: VpnScope(
+                    vpnRepository: nativeVpn,
+                    appWindowControllerProvider: () => throw UnsupportedError('Android'),
+                    child: const App(home: _Screen()),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       final home = tester.element(find.byType(_Screen));
       final vpn = VpnScope.vpnControllerOf(home, listen: false);
@@ -173,6 +228,7 @@ void main() {
         await tester.tap(find.widgetWithText(RadioListTile<ThemeMode>, label));
         await tester.pumpAndSettle();
       }
+
       await choose('Dark');
       expect(Theme.of(home).brightness, Brightness.dark);
       expect(nativeVpn.commands, startup);

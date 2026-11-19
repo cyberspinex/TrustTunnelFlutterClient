@@ -12,24 +12,21 @@ class ServersCardConnectionButton extends StatelessWidget {
   final VpnState vpnManagerState;
   final VoidCallback onPressed;
 
-  const ServersCardConnectionButton({
-    super.key,
-    required this.vpnManagerState,
-    required this.onPressed,
-  });
+  const ServersCardConnectionButton({super.key, required this.vpnManagerState, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     final android = defaultTargetPlatform == TargetPlatform.android;
     final pending = vpnManagerState != VpnState.connected && vpnManagerState != VpnState.disconnected;
     final connected = vpnManagerState == VpnState.connected;
-    final waitingIcon = android
-        ? switch (vpnManagerState) {
-            VpnState.waitingForNetwork => Icons.signal_wifi_off,
-            VpnState.waitingForRecovery => Icons.hourglass_empty,
-            _ => null,
-          }
-        : null;
+    final darkAndroid = android && context.theme.brightness == Brightness.dark;
+    final icon = switch (vpnManagerState) {
+      VpnState.waitingForNetwork when android => Icons.signal_wifi_off,
+      VpnState.waitingForRecovery when android => Icons.hourglass_empty,
+      VpnState.connected when darkAndroid => AssetIcons.check,
+      VpnState.connected || VpnState.disconnected => AssetIcons.powerSettingsNew,
+      _ => AssetIcons.update,
+    };
     final status = android
         ? switch (vpnManagerState) {
             VpnState.connected => context.ln.trayStatusConnected,
@@ -40,10 +37,14 @@ class ServersCardConnectionButton extends StatelessWidget {
             VpnState.recovering => context.ln.vpnRecovering,
           }
         : null;
-    final darkConnected = android && connected && context.theme.brightness == Brightness.dark;
+    final action = switch (vpnManagerState) {
+      VpnState.connected => context.ln.disconnect,
+      VpnState.disconnected => context.ln.connect,
+      _ => status,
+    };
     final button = CustomIconButton.square(
-      icon: waitingIcon ?? (pending ? AssetIcons.update : darkConnected ? AssetIcons.check : AssetIcons.powerSettingsNew),
-      tooltip: android ? (pending ? status : connected ? context.ln.disconnect : context.ln.connect) : null,
+      icon: icon,
+      tooltip: android ? action : null,
       onPressed: onPressed,
       size: 24,
       selected: pending || connected,
@@ -54,9 +55,7 @@ class ServersCardConnectionButton extends StatelessWidget {
             ? context.theme.extension<CustomFilledIconButtonTheme>()!.iconButtonInProgress
             : context.theme.extension<CustomFilledIconButtonTheme>()!.iconButton,
       ),
-      child: pending && waitingIcon == null
-          ? RotatingWidget(duration: const Duration(seconds: 1), child: button)
-          : button,
+      child: icon == AssetIcons.update ? RotatingWidget(duration: const Duration(seconds: 1), child: button) : button,
     );
     return android ? Semantics(value: status, child: content) : content;
   }

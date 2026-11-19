@@ -707,7 +707,7 @@ class AppTheme {
   late final _menuBarThemeData = MenuBarThemeData(
     style: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(_background),
-      surfaceTintColor: WidgetStatePropertyAll(_transparent),
+      surfaceTintColor: const WidgetStatePropertyAll(_transparent),
     ),
   );
 
@@ -716,9 +716,9 @@ class AppTheme {
     inputDecorationTheme: _inputDecorationTheme,
     menuStyle: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(_background),
-      surfaceTintColor: WidgetStatePropertyAll(_transparent),
+      surfaceTintColor: const WidgetStatePropertyAll(_transparent),
       visualDensity: VisualDensity.standard,
-      padding: WidgetStatePropertyAll(
+      padding: const WidgetStatePropertyAll(
         EdgeInsets.symmetric(vertical: 8),
       ),
     ),
@@ -727,7 +727,7 @@ class AppTheme {
   late final _menuThemeData = MenuThemeData(
     style: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(_background),
-      surfaceTintColor: WidgetStatePropertyAll(_transparent),
+      surfaceTintColor: const WidgetStatePropertyAll(_transparent),
     ),
   );
 

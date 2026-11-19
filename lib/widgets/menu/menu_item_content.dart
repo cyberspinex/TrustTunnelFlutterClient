@@ -17,7 +17,9 @@ class MenuItemContent extends StatelessWidget {
       spacing: 12,
       children: [
         CustomIcon.medium(icon: icon, color: color),
-        Flexible(child: Text(label, style: context.textTheme.bodyLarge?.copyWith(color: color))),
+        Flexible(
+          child: Text(label, style: context.textTheme.bodyLarge?.copyWith(color: color)),
+        ),
       ],
     );
   }
