@@ -239,7 +239,7 @@ def main():
     shell("input", "keyevent", "KEYCODE_WAKEUP")
     until(lambda: shell("cat", "/proc/sys/kernel/random/boot_id") != previous_boot, 45, "a new Android kernel boot")
     shell("wm", "dismiss-keyguard")
-    until(lambda: shell("cmd", "user", "is-user-unlocked", "0") == "true", 90, "first user unlock")
+    until(lambda: "RUNNING_UNLOCKED" in shell("am", "get-started-user-state", "0"), 90, "first user unlock")
     shell("input", "keyevent", "KEYCODE_HOME")
     tap_tile("Disconnected", after_boot=True)
     status, tile = shade(statuses)
