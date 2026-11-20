@@ -94,20 +94,30 @@ def press(node):
     shell("input", "tap", (x1 + x2) // 2, (y1 + y2) // 2)
 
 
-def shade(statuses):
+def shade(statuses, *, after_boot=False):
     shell("cmd", "statusbar", "expand-settings")
     def visible():
-        screen = [n for n in nodes() if n.get("package") == "com.android.systemui"]
+        tree = nodes()
+        if after_boot and any("System UI" in words(n) and "responding" in words(n) for n in tree):
+            wait = next((n for n in tree if n.get("resource-id") == "android:id/aerr_wait" or n.get("text") == "Wait"), None)
+            if wait is not None:
+                print("Android SystemUI is recovering after boot; waiting for the panel", flush=True)
+                press(wait)
+                time.sleep(4)
+                return None
+        screen = [n for n in tree if n.get("package") == "com.android.systemui"]
         tile = next((n for n in screen if NAME in words(n)), None)
         if tile is None:
+            if after_boot:
+                shell("cmd", "statusbar", "expand-settings")
             return None
         contents = " ".join(words(n) for n in screen)
         return next(((s, tile) for s in statuses if s.lower() in contents.lower()), None)
-    return until(visible, 55, "SystemUI tile showing " + " / ".join(statuses))
+    return until(visible, 140 if after_boot else 55, "SystemUI tile showing " + " / ".join(statuses))
 
 
-def tap_tile(*statuses):
-    _, node = shade(statuses)
+def tap_tile(*statuses, after_boot=False):
+    _, node = shade(statuses, after_boot=after_boot)
     press(node)
 
 
@@ -220,14 +230,18 @@ def main():
     checkpoint("Main activity can reopen after headless profile reads")
     shell("input", "keyevent", "KEYCODE_HOME")
     before = native_starts()
+    previous_boot = shell("cat", "/proc/sys/kernel/random/boot_id")
     adb("reboot")
     adb("wait-for-device", timeout=110)
     until(lambda: adb("shell", "getprop", "sys.boot_completed", check=False).stdout.strip() == b"1", 120, "Android reboot")
     adb("root")
     adb("wait-for-device")
     shell("input", "keyevent", "KEYCODE_WAKEUP")
+    until(lambda: shell("cat", "/proc/sys/kernel/random/boot_id") != previous_boot, 45, "a new Android kernel boot")
     shell("wm", "dismiss-keyguard")
-    tap_tile("Disconnected")
+    until(lambda: shell("cmd", "user", "is-user-unlocked", "0") == "true", 90, "first user unlock")
+    shell("input", "keyevent", "KEYCODE_HOME")
+    tap_tile("Disconnected", after_boot=True)
     status, tile = shade(statuses)
     if status != "Connection failed":
         press(tile)
