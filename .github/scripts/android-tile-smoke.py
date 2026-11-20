@@ -16,6 +16,7 @@ PKG = theme.PACKAGE
 COMPONENT = PKG + "/com.adguard.trusttunnel.vpn_plugin.TrustTunnelTileService"
 DB = "/data/user/0/" + PKG + "/app_flutter/vpn_oss_db.sqlite"
 NAME = "TrustTunnel NAVQS"
+START_STATUSES = ["Connection failed", "Waiting to reconnect", "Reconnecting", "Waiting for network", "Connecting"]
 
 
 def adb(*args, check=True, timeout=40):
@@ -146,16 +147,40 @@ def checkpoint(message):
     print("PASS", message, flush=True)
 
 
+def check_after_boot(previous_boot):
+    boot = shell("cat", "/proc/sys/kernel/random/boot_id")
+    if not re.fullmatch(r"[0-9a-f-]{36}", boot) or boot == previous_boot:
+        raise AssertionError("Expected a fresh Android kernel boot")
+    until(lambda: "RUNNING_UNLOCKED" in shell("am", "get-started-user-state", "0"), 90, "first user unlock")
+    if COMPONENT not in shell("settings", "get", "secure", "sysui_qs_tiles"):
+        raise AssertionError("SystemUI lost the installed tile on reboot")
+    if "allow" not in shell("cmd", "appops", "get", PKG, "ACTIVATE_VPN"):
+        raise AssertionError("Android lost the VPN authorization on reboot")
+    shell("input", "keyevent", "KEYCODE_HOME")
+    before = native_starts()
+    tap_tile("Disconnected", after_boot=True)
+    status, tile = shade(START_STATUSES)
+    if status != "Connection failed":
+        press(tile)
+        shade(["Disconnected", "Connection failed"])
+    check_service_start(before, "a new native service start after the first unlock")
+    checkpoint("Tile can start after reboot and first unlock without opening TrustTunnel")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("apk", type=Path)
     parser.add_argument("evidence", type=Path)
     parser.add_argument("--baseline", type=Path)
+    parser.add_argument("--previous-boot", help="Run only the post-boot check on the existing installation")
     args = parser.parse_args()
     adb("root")
     adb("wait-for-device")
     if shell("id", "-u") != "0":
         raise RuntimeError("Fixture setup requires a disposable userdebug emulator")
+    if args.previous_boot:
+        check_after_boot(args.previous_boot)
+        return
     shell("cmd", "uimode", "night", "no")
     adb("install", "-r", args.baseline or args.apk, timeout=120)
     theme.start()
@@ -204,8 +229,7 @@ def main():
     tap_tile("VPN permission declined")
     consent("button1")
     time.sleep(1.0)
-    statuses = ["Connection failed", "Waiting to reconnect", "Reconnecting", "Waiting for network", "Connecting"]
-    status, tile = shade(statuses)
+    status, tile = shade(START_STATUSES)
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
@@ -218,7 +242,7 @@ def main():
     before = native_starts()
     shell("cmd", "statusbar", "expand-settings")
     tap_tile("Disconnected")
-    status, tile = shade(statuses)
+    status, tile = shade(START_STATUSES)
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
@@ -229,25 +253,6 @@ def main():
     theme.check_surface("tile-main-ui-after-cold-start", theme.DARK if args.baseline else theme.LIGHT, args.evidence)
     checkpoint("Main activity can reopen after headless profile reads")
     shell("input", "keyevent", "KEYCODE_HOME")
-    before = native_starts()
-    previous_boot = shell("cat", "/proc/sys/kernel/random/boot_id")
-    adb("reboot")
-    adb("wait-for-device", timeout=110)
-    until(lambda: adb("shell", "getprop", "sys.boot_completed", check=False).stdout.strip() == b"1", 120, "Android reboot")
-    adb("root")
-    adb("wait-for-device")
-    shell("input", "keyevent", "KEYCODE_WAKEUP")
-    until(lambda: shell("cat", "/proc/sys/kernel/random/boot_id") != previous_boot, 45, "a new Android kernel boot")
-    shell("wm", "dismiss-keyguard")
-    until(lambda: "RUNNING_UNLOCKED" in shell("am", "get-started-user-state", "0"), 90, "first user unlock")
-    shell("input", "keyevent", "KEYCODE_HOME")
-    tap_tile("Disconnected", after_boot=True)
-    status, tile = shade(statuses)
-    if status != "Connection failed":
-        press(tile)
-        shade(["Disconnected", "Connection failed"])
-    check_service_start(before, "a native service start after reboot")
-    checkpoint("Tile can start after reboot and first unlock without opening TrustTunnel")
 
 
 if __name__ == "__main__":

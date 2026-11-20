@@ -30,10 +30,7 @@ cfg="$ANDROID_AVD_HOME/theme-test.avd/config.ini"
 sed -i '/^disk.dataPartition.size=/d' "$cfg"
 echo 'disk.dataPartition.size=2048M' >> "$cfg"
 adb start-server
-"$emulator" -avd theme-test -port 5554 -no-window -no-audio -no-metrics -no-snapshot \
-  -no-boot-anim -gpu software -camera-front none -camera-back none -cores 2 -memory 2048 \
-  >theme-screens/emulator.log 2>&1 &
-pid=$!
+pid=
 cleanup() {
   status=$?
   if (( status != 0 )); then
@@ -44,23 +41,30 @@ cleanup() {
       timeout 10 adb exec-out screencap -p >theme-screens/failure.png || true
     fi
   fi
-  kill "$pid" 2>/dev/null || true
+  if [[ -n "$pid" ]]; then kill "$pid" 2>/dev/null || true; fi
 }
 trap cleanup EXIT
-deadline=$((SECONDS + 480))
-until [[ "$(timeout 8 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)" == 1 ]]; do
-  if ! kill -0 "$pid" 2>/dev/null; then
-    echo 'Android emulator exited before the guest booted'
-    exit 1
-  fi
-  if (( SECONDS >= deadline )); then
-    echo 'Android guest did not finish booting within eight minutes'
-    exit 1
-  fi
-  sleep 3
-done
-adb shell input keyevent KEYCODE_WAKEUP
-adb shell wm dismiss-keyguard
+boot_android() {
+  "$emulator" -avd theme-test -port 5554 -no-window -no-audio -no-metrics -no-snapshot \
+    -no-boot-anim -gpu software -camera-front none -camera-back none -cores 2 -memory 2048 \
+    >>theme-screens/emulator.log 2>&1 &
+  pid=$!
+  deadline=$((SECONDS + 480))
+  until [[ "$(timeout 8 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)" == 1 ]]; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo 'Android emulator exited before the guest booted'
+      exit 1
+    fi
+    if (( SECONDS >= deadline )); then
+      echo 'Android guest did not finish booting within eight minutes'
+      exit 1
+    fi
+    sleep 3
+  done
+  adb shell input keyevent KEYCODE_WAKEUP
+  adb shell wm dismiss-keyguard
+}
+boot_android
 apk=$(find signed -name '*.apk' | sort -V | tail -1)
 sha256sum "$apk"
 if [[ "${GITHUB_REF_NAME:-}" == android/quick-settings ]]; then
@@ -69,6 +73,23 @@ if [[ "${GITHUB_REF_NAME:-}" == android/quick-settings ]]; then
     baseline_args+=(--baseline baseline/TrustTunnel-NAVQS-arm64-11.apk)
   fi
   python3 .github/scripts/android-tile-smoke.py "$apk" theme-screens "${baseline_args[@]}"
+  previous_boot=$(adb shell cat /proc/sys/kernel/random/boot_id | tr -d '\r')
+  # The emulator can crash during an in-process guest reboot. Reopen the persisted
+  # userdata image with a new emulator process and kernel, without a snapshot.
+  adb shell sync
+  adb emu kill
+  for tick in {1..45}; do
+    if ! kill -0 "$pid" 2>/dev/null; then break; fi
+    sleep 1
+  done
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "Emulator did not finish powering down"
+    exit 1
+  fi
+  wait "$pid" || true
+  pid=
+  boot_android
+  python3 .github/scripts/android-tile-smoke.py "$apk" theme-screens --previous-boot "$previous_boot"
   adb shell pm clear com.adguard.trusttunnel.control
 fi
 python3 .github/scripts/android-theme-smoke.py "$apk" theme-screens
