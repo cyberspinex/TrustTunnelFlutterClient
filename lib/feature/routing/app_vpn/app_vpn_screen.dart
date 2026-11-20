@@ -62,6 +62,7 @@ class _AppVpnScreenState extends State<AppVpnScreen>
   List<List<_App>>? _groups;
   bool _catalogFailed = false;
   bool _busy = false;
+  final _searchController = TextEditingController();
   String _query = '';
 
   @override
@@ -95,6 +96,7 @@ class _AppVpnScreenState extends State<AppVpnScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _packageRefresh?.cancel();
+    _searchController.dispose();
     _events.cancel();
     super.dispose();
   }
@@ -387,7 +389,7 @@ class _AppVpnScreenState extends State<AppVpnScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
-              key: const ValueKey('app-vpn-search'),
+              controller: _searchController,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
                 labelText: ln.appVpnSearch,
