@@ -20,8 +20,6 @@ fi
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 test -x "$emulator"
 printf 'no\n' | "$cli/avdmanager" create avd --name theme-test --package "$image" --device pixel_2
-sudo setfacl -m "u:$(id -un):rw" /dev/kvm
-"$emulator" -accel-check
 "$emulator" -list-avds
 df -h "$ANDROID_AVD_HOME"
 
@@ -45,6 +43,9 @@ cleanup() {
 }
 trap cleanup EXIT
 boot_android() {
+  # The hosted runner can reset the KVM device ACL when the last VM shuts down.
+  sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+  "$emulator" -accel-check
   "$emulator" -avd theme-test -port 5554 -no-window -no-audio -no-metrics -no-snapshot \
     -no-boot-anim -gpu software -camera-front none -camera-back none -cores 2 -memory 2048 \
     >>theme-screens/emulator.log 2>&1 &
