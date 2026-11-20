@@ -50,6 +50,7 @@ jobs:
         if: github.ref == 'refs/heads/android/app-vpn' || github.ref == 'refs/heads/fix/app-vpn-atomic-write'
         env:
           GPR_KEY: ${{ github.token }}
+          RUN_APP_VPN_TESTS: ${{ github.ref == 'refs/heads/fix/app-vpn-atomic-write' }}
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35"
           make prepare-android-app-vpn
