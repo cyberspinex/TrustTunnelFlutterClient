@@ -174,3 +174,7 @@ ci-fastlane-build-macos: ci-setup-gpr ci-setup-ruby-macos
 	@echo "* Building macOS app via fastlane *"
 	@cd macos && bundle exec fastlane build_and_package type:"$${BUILD_TYPE:-developer_id}"
 	@echo "* macOS build done *"
+
+.PHONY: prepare-android-app-vpn
+prepare-android-app-vpn:
+	@bash .github/scripts/prepare-app-vpn-sdk.sh

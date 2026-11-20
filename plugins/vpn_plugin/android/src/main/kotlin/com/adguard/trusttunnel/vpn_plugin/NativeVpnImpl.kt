@@ -89,6 +89,7 @@ internal class NativeVpnImpl private constructor(private val context: Context) :
                 } else if (!initial && awaitingConnection && stage == Stage.STARTING) {
                     problem = R.string.qs_failed
                 }
+                appVpnError()?.let { problem = it }
                 awaitingConnection = false
                 tileSession = null
                 tileSessions.emit()
@@ -111,6 +112,32 @@ internal class NativeVpnImpl private constructor(private val context: Context) :
                 afterStop = null
                 if (queued != null) beginApp(queued)
             }
+        }
+    }
+
+    private fun appVpnError(): Int? = when (VpnService.appVpnStatus.error) {
+        "storage", "version" -> R.string.qs_app_vpn_storage
+        "empty" -> R.string.qs_app_vpn_empty
+        "package", "self", "group" -> R.string.qs_app_vpn_package
+        else -> null
+    }
+
+    override fun onAppVpnChanged() {
+        main.post {
+            val error = appVpnError()
+            if (error != null && problem != error) {
+                problem = error
+                Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+            }
+            refresh()
+        }
+    }
+
+    fun appVpnEdited() {
+        main.post {
+            if (problem == R.string.qs_app_vpn_storage || problem == R.string.qs_app_vpn_empty ||
+                problem == R.string.qs_app_vpn_package) problem = null
+            refresh()
         }
     }
 

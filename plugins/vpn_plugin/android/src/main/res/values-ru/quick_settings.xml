@@ -20,4 +20,7 @@
     <string name="qs_permission_failed">Проверьте разрешение VPN и повторите попытку</string>
     <string name="qs_permission_denied">Разрешение VPN отклонено. Нажмите для повтора</string>
     <string name="qs_interrupted">Соединение завершено</string>
+    <string name="qs_app_vpn_storage">Восстановите правила приложений в TrustTunnel</string>
+    <string name="qs_app_vpn_empty">Выберите установленное приложение для VPN</string>
+    <string name="qs_app_vpn_package">Проверьте выбранные приложения в TrustTunnel</string>
 </resources>

@@ -20,4 +20,7 @@
     <string name="qs_permission_failed">Check VPN permission and retry</string>
     <string name="qs_permission_denied">VPN permission declined. Tap to retry</string>
     <string name="qs_interrupted">Connection ended</string>
+    <string name="qs_app_vpn_storage">Restore the app routing settings in TrustTunnel</string>
+    <string name="qs_app_vpn_empty">Select an installed app for the VPN</string>
+    <string name="qs_app_vpn_package">Check the selected apps in TrustTunnel</string>
 </resources>

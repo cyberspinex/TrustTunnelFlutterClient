@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:trusttunnel/common/assets/asset_icons.dart';
 import 'package:trusttunnel/common/extensions/context_extensions.dart';
 import 'package:trusttunnel/common/localization/localization.dart';
 import 'package:trusttunnel/data/model/routing_profile.dart';
+import 'package:trusttunnel/feature/routing/app_vpn/app_vpn_screen.dart';
 import 'package:trusttunnel/feature/routing/routing/widgets/routing_card.dart';
 import 'package:trusttunnel/feature/routing/routing/widgets/scope/routing_scope.dart';
 import 'package:trusttunnel/feature/routing/routing/widgets/scope/routing_scope_aspect.dart';
@@ -24,7 +26,10 @@ class _RoutingScreenViewState extends State<RoutingScreenView> {
   @override
   void initState() {
     super.initState();
-    _routingProfiles = RoutingScope.controllerOf(context, listen: false).routingList;
+    _routingProfiles = RoutingScope.controllerOf(
+      context,
+      listen: false,
+    ).routingList;
   }
 
   @override
@@ -40,19 +45,33 @@ class _RoutingScreenViewState extends State<RoutingScreenView> {
   Widget build(BuildContext context) => ScaffoldWrapper(
     child: ScaffoldMessenger(
       child: Scaffold(
-        appBar: CustomAppBar(
-          title: context.ln.routing,
-        ),
+        appBar: CustomAppBar(title: context.ln.routing),
         body: ListView.builder(
-          itemBuilder: (context, index) => Column(
-            children: [
-              RoutingCard(
-                routingProfile: _routingProfiles[index],
-              ),
-              index == _routingProfiles.length - 1 ? const SizedBox(height: 80) : const Divider(),
-            ],
-          ),
-          itemCount: _routingProfiles.length,
+          itemBuilder: (context, index) {
+            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+              if (index == 0) {
+                return ListTile(
+                  title: Text(context.ln.appVpnTitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(const AppVpnScreen()),
+                );
+              }
+              index--;
+            }
+            return Column(
+              children: [
+                RoutingCard(routingProfile: _routingProfiles[index]),
+                index == _routingProfiles.length - 1
+                    ? const SizedBox(height: 80)
+                    : const Divider(),
+              ],
+            );
+          },
+          itemCount:
+              _routingProfiles.length +
+              (!kIsWeb && defaultTargetPlatform == TargetPlatform.android
+                  ? 1
+                  : 0),
         ),
         floatingActionButton: Builder(
           builder: (context) => CustomFloatingActionButton.extended(
@@ -66,9 +85,7 @@ class _RoutingScreenViewState extends State<RoutingScreenView> {
   );
 
   void _pushRoutingProfileDetailsScreen(BuildContext context) async {
-    await context.push(
-      const RoutingDetailsScreen(),
-    );
+    await context.push(const RoutingDetailsScreen());
 
     if (context.mounted) {
       RoutingScope.controllerOf(context, listen: false).fetchProfiles();

@@ -2,7 +2,7 @@ name: TrustTunnel NAVQS Android APK
 
 on:
   push:
-    branches: [android/control-apk, android/dark-theme, android/quick-settings]
+    branches: [android/control-apk, android/dark-theme, android/quick-settings, android/app-vpn]
     paths-ignore:
       - .github/scripts/boot-theme-emulator.sh
       - .github/scripts/android-theme-smoke.py
@@ -46,6 +46,14 @@ jobs:
           flutter precache --android
           make init
 
+      - name: Build the pinned App VPN Android adapter
+        if: github.ref == 'refs/heads/android/app-vpn'
+        env:
+          GPR_KEY: ${{ github.token }}
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35"
+          make prepare-android-app-vpn
+
       - name: Check Android theme behavior, contrast and VPN scope
         if: (github.ref == 'refs/heads/android/dark-theme' || github.ref == 'refs/heads/android/quick-settings')
         run: |
@@ -82,6 +90,15 @@ jobs:
             grep -F "launchable-activity: name='com.adguard.trusttunnel.MainActivity'" "$RUNNER_TEMP/badging"
             unzip -Z1 "$apk" > "$RUNNER_TEMP/entries"
             grep -Fx 'lib/arm64-v8a/libtrusttunnel_android.so' "$RUNNER_TEMP/entries"
+            if [[ "$GITHUB_REF_NAME" == android/app-vpn ]]; then
+              revision=$(cat android/app-vpn-sdk.rev)
+              test "$(unzip -p "$apk" assets/navqs-app-vpn-sdk-revision)" = "$revision"
+              unzip -p "$apk" 'classes*.dex' > "$RUNNER_TEMP/navqs.dex"
+              grep -aqF 'Lcom/adguard/trusttunnel/AppVpnStore;' "$RUNNER_TEMP/navqs.dex"
+              unzip -p "$apk" lib/arm64-v8a/libtrusttunnel_android.so > "$RUNNER_TEMP/navqs-engine.so"
+              echo "4f5b50de041439b4dfb4064e4753d9299cf3c64b00ed82adf8da7b75c9ac962f  $RUNNER_TEMP/navqs-engine.so" | sha256sum -c -
+              echo "Packaged App VPN adapter from $revision; ARM64 engine matches build 2017"
+            fi
           done
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -95,7 +112,7 @@ jobs:
 
   sign:
     needs: build
-    if: github.ref == 'refs/heads/android/control-apk' || (github.ref == 'refs/heads/android/dark-theme' || github.ref == 'refs/heads/android/quick-settings')
+    if: contains(fromJSON('["refs/heads/android/control-apk","refs/heads/android/dark-theme","refs/heads/android/quick-settings","refs/heads/android/app-vpn"]'), github.ref)
     runs-on: ubuntu-24.04
     permissions:
       contents: read

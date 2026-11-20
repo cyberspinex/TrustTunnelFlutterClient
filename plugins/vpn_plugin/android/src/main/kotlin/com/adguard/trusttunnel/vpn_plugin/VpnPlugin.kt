@@ -8,12 +8,14 @@ import io.flutter.plugin.common.EventChannel
 
 class VpnPlugin : FlutterPlugin, ActivityAware, IVpnManager {
     @Volatile private var activity: Activity? = null
+    private lateinit var appVpn: AppVpnChannel
     private lateinit var vpn: NativeVpnImpl
     private val subscriptions = mutableMapOf<EventChannel, EventChannel.StreamHandler>()
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         vpn = NativeVpnImpl.get(binding.applicationContext)
         val messenger = binding.binaryMessenger
+        appVpn = AppVpnChannel(binding.applicationContext, messenger, vpn)
         IVpnManager.setUp(messenger, this)
         IDeepLink.setUp(messenger, DeepLinkImpl())
 
@@ -38,6 +40,7 @@ class VpnPlugin : FlutterPlugin, ActivityAware, IVpnManager {
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        appVpn.dispose()
         subscriptions.forEach { (channel, handler) ->
             handler.onCancel(null)
             channel.setStreamHandler(null)

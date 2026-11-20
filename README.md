@@ -78,6 +78,12 @@ https://docs.flutter.dev/get-started
 
 ### Building
 
+On the `android/app-vpn` branch, run `make prepare-android-app-vpn` before
+building the Android APK. The command uses `GPR_KEY` with read access to the
+upstream Android package. It compiles the Android adapter pinned in
+`android/app-vpn-sdk.rev` and reuses the ARM64 network engine from 1.3.0-rc.3.
+
+
 To build and run the application follow this steps:
 
 #### 1. Clone repository

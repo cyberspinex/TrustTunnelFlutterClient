@@ -288,5 +288,59 @@
   "themeSaveFailed": "Could not save the theme. Please try again.",
   "vpnWaitingForNetwork": "Waiting for network",
   "vpnWaitingForRecovery": "Waiting to reconnect",
-  "vpnRecovering": "Reconnecting…"
+  "vpnRecovering": "Reconnecting…",
+  "appVpnTitle": "Applications",
+  "appVpnEnable": "Route by application",
+  "appVpnInclude": "Only selected apps use the VPN",
+  "appVpnExclude": "Selected apps bypass the VPN",
+  "appVpnOff": "Normal profile routing",
+  "appVpnChosen": "Selected packages: {count}",
+  "@appVpnChosen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appVpnLockdown": "When Android blocks connections without VPN, apps outside the tunnel lose network access.",
+  "appVpnSearch": "Search by name or package",
+  "appVpnSystemApp": "System app",
+  "appVpnSharedUid": "These packages share an Android UID and are routed together.",
+  "appVpnMissing": "Not installed",
+  "appVpnNoMatches": "No matching applications",
+  "appVpnEmpty": "Select at least one installed app before connecting.",
+  "appVpnNoExclusions": "No installed exceptions. All apps use the profile routing rules.",
+  "appVpnSharedError": "The selected apps share an Android UID. Select or clear the entire group.",
+  "appVpnPackageError": "Android could not apply the selected packages. Review the list and retry.",
+  "appVpnStorageError": "Saved app routing rules are unavailable or incompatible. Restore the settings before connecting.",
+  "appVpnChanged": "The saved selection changed. Review it and try again.",
+  "appVpnWriteError": "Could not save the settings. Check the selection shown and try again.",
+  "appVpnOperationError": "The operation failed. Check the VPN connection and retry.",
+  "appVpnInactive": "The VPN connection is no longer active.",
+  "appVpnReset": "Reset app routing",
+  "appVpnResetDescription": "Remove the unreadable selection and turn off app routing? New connections will use normal profile routing.",
+  "appVpnInUse": "In use: {mode}",
+  "@appVpnInUse": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "appVpnActivePackages": "Installed packages in the active rule: {count}",
+  "@appVpnActivePackages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appVpnConnected": "VPN connected",
+  "appVpnDisconnected": "VPN disconnected",
+  "appVpnTransition": "Connecting or restoring VPN",
+  "appVpnPending": "Changes saved for the next connection",
+  "appVpnReconnectHint": "Reconnecting now briefly interrupts the tunnel.",
+  "appVpnReconnect": "Reconnect now",
+  "appVpnRetry": "Retry",
+  "appVpnRetryApps": "Reload the app list"
 }
