@@ -2,7 +2,7 @@ name: TrustTunnel NAVQS Android APK
 
 on:
   push:
-    branches: [android/control-apk, android/dark-theme, android/quick-settings, android/app-vpn]
+    branches: [android/control-apk, android/dark-theme, android/quick-settings, android/app-vpn, fix/app-vpn-atomic-write]
     paths-ignore:
       - .github/scripts/boot-theme-emulator.sh
       - .github/scripts/android-theme-smoke.py
@@ -47,7 +47,7 @@ jobs:
           make init
 
       - name: Build the pinned App VPN Android adapter
-        if: github.ref == 'refs/heads/android/app-vpn'
+        if: github.ref == 'refs/heads/android/app-vpn' || github.ref == 'refs/heads/fix/app-vpn-atomic-write'
         env:
           GPR_KEY: ${{ github.token }}
         run: |
@@ -90,7 +90,7 @@ jobs:
             grep -F "launchable-activity: name='com.adguard.trusttunnel.MainActivity'" "$RUNNER_TEMP/badging"
             unzip -Z1 "$apk" > "$RUNNER_TEMP/entries"
             grep -Fx 'lib/arm64-v8a/libtrusttunnel_android.so' "$RUNNER_TEMP/entries"
-            if [[ "$GITHUB_REF_NAME" == android/app-vpn ]]; then
+            if [[ "$GITHUB_REF_NAME" == android/app-vpn || "$GITHUB_REF_NAME" == fix/app-vpn-atomic-write ]]; then
               revision=$(cat android/app-vpn-sdk.rev)
               test "$(unzip -p "$apk" assets/navqs-app-vpn-sdk-revision)" = "$revision"
               unzip -p "$apk" 'classes*.dex' > "$RUNNER_TEMP/navqs.dex"
@@ -112,7 +112,7 @@ jobs:
 
   sign:
     needs: build
-    if: contains(fromJSON('["refs/heads/android/control-apk","refs/heads/android/dark-theme","refs/heads/android/quick-settings","refs/heads/android/app-vpn"]'), github.ref)
+    if: contains(fromJSON('["refs/heads/android/control-apk","refs/heads/android/dark-theme","refs/heads/android/quick-settings","refs/heads/android/app-vpn","refs/heads/fix/app-vpn-atomic-write"]'), github.ref)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
