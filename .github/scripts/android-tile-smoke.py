@@ -120,16 +120,16 @@ def consent(button):
     press(answer[0])
 
 
-def clear_service_evidence():
-    adb("logcat", "-b", "events", "-c")
+def native_starts():
+    # On this disposable fixture count only the SDK's onStartCommand(ACTION_START) records.
+    # Android can destroy a service for a refused loopback connection between two UI dumps.
+    cmd = f"cat /data/user/0/{PKG}/files/logs/vpn*.log 2>/dev/null"
+    raw = adb("shell", cmd, check=False).stdout
+    return raw.count(b"Start executing action=Start ")
 
 
-def service_started():
-    component = PKG + "/com.adguard.trusttunnel.VpnService"
-    events = adb("logcat", "-b", "events", "-d", "-s", "am_create_service").stdout.decode(errors="replace")
-    if component in events or component in shell("dumpsys", "activity", "services", PKG):
-        return True
-    return False
+def check_service_start(before, label):
+    until(lambda: native_starts() > before, 20, label)
 
 
 def checkpoint(message):
@@ -190,7 +190,7 @@ def main():
     consent("button2")
     shade(["VPN permission declined"])
     checkpoint("System consent denied and the tile is ready to retry")
-    clear_service_evidence()
+    before = native_starts()
     tap_tile("VPN permission declined")
     consent("button1")
     time.sleep(1.0)
@@ -199,29 +199,32 @@ def main():
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
-    until(service_started, 20, "Android to record creation of the native VPN service")
+    check_service_start(before, "Android to record creation of the native VPN service")
     checkpoint("System consent approval starts the native VPN path; unreachable loopback endpoint stays inactive")
     if "allow" not in shell("cmd", "appops", "get", PKG, "ACTIVATE_VPN"):
         raise AssertionError("Expected Android VPN authorization")
     checkpoint("Approval persisted in Android")
     cold()
-    clear_service_evidence()
+    before = native_starts()
     shell("cmd", "statusbar", "expand-settings")
     tap_tile("Disconnected")
     status, tile = shade(statuses)
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
-    until(service_started, 20, "a native service start from a cold process")
+    check_service_start(before, "a native service start from a cold process")
     checkpoint("Cold start with previously granted permission and closed main UI")
     shell("cmd", "statusbar", "collapse")
     theme.start()
     theme.check_surface("tile-main-ui-after-cold-start", theme.DARK if args.baseline else theme.LIGHT, args.evidence)
     checkpoint("Main activity can reopen after headless profile reads")
     shell("input", "keyevent", "KEYCODE_HOME")
+    before = native_starts()
     adb("reboot")
     adb("wait-for-device", timeout=110)
-    until(lambda: shell("getprop", "sys.boot_completed") == "1", 120, "Android reboot")
+    until(lambda: adb("shell", "getprop", "sys.boot_completed", check=False).stdout.strip() == b"1", 120, "Android reboot")
+    adb("root")
+    adb("wait-for-device")
     shell("input", "keyevent", "KEYCODE_WAKEUP")
     shell("wm", "dismiss-keyguard")
     tap_tile("Disconnected")
@@ -229,9 +232,19 @@ def main():
     if status != "Connection failed":
         press(tile)
         shade(["Disconnected", "Connection failed"])
-    until(service_started, 20, "a native service start after reboot")
+    check_service_start(before, "a native service start after reboot")
     checkpoint("Tile can start after reboot and first unlock without opening TrustTunnel")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        # Emit only fixed diagnostic names. The SDK log itself can contain configuration data.
+        disk = adb("shell", f"cat /data/user/0/{PKG}/files/logs/vpn*.log 2>/dev/null", check=False).stdout
+        oslog = adb("logcat", "-d", "-b", "system", "-b", "main", check=False).stdout
+        for marker in (b"Start executing action=Start", b"Start executing action=Stop", b"VpnService onStateChanged",
+                       b"ForegroundServiceStartNotAllowedException", b"SecurityException", b"Error occurred while service starting",
+                       b"Error while executing command", b"Unable to start service", b"FATAL EXCEPTION"):
+            print("Diagnostic", marker.decode(), "SDK", disk.count(marker), "Android", oslog.count(marker), flush=True)
+        raise
