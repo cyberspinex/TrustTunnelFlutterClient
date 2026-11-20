@@ -77,6 +77,8 @@ def main():
     package = adb("shell", "dumpsys", "package", PACKAGE).decode()
     print(next(line.strip() for line in package.splitlines() if "versionCode=" in line), flush=True)
     adb("shell", "cmd", "uimode", "night", "no")
+    # The tile checks can leave Quick Settings covering the activity after reboot.
+    adb("shell", "cmd", "statusbar", "collapse")
     start()
     check_surface("01-first-launch-light", LIGHT, args.evidence)
     pid = adb("shell", "pidof", PACKAGE).strip()
