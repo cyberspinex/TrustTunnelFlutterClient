@@ -9,7 +9,7 @@ export ANDROID_SERIAL=emulator-5554
 mkdir -p "$ANDROID_AVD_HOME" theme-screens
 "$cli/sdkmanager" --install "platform-tools" "emulator" "$image"
 # Keep the runner's emulator consistent with the accepted Android 15 baseline.
-if ! "$emulator" -version | grep -F '37.2.13.0' >/dev/null; then
+if ! grep -Eq '^Pkg.Revision[[:space:]]*=[[:space:]]*37\.2\.13(\.0)?[[:space:]]*$' "$ANDROID_HOME/emulator/source.properties"; then
   archive="$RUNNER_TEMP/navqs-emulator-16740729.zip"
   curl --fail --silent --show-error --location --retry 3 \
     https://dl.google.com/android/repository/emulator-linux_x64-16740729.zip -o "$archive"
@@ -18,7 +18,7 @@ if ! "$emulator" -version | grep -F '37.2.13.0' >/dev/null; then
   emulator="$RUNNER_TEMP/navqs-emulator-16740729/emulator/emulator"
 fi
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
-"$emulator" -version
+test -x "$emulator"
 printf 'no\n' | "$cli/avdmanager" create avd --name theme-test --package "$image" --device pixel_2
 sudo setfacl -m "u:$(id -un):rw" /dev/kvm
 "$emulator" -accel-check
