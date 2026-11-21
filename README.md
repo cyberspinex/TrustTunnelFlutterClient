@@ -4,17 +4,17 @@ English · [Русский](README.ru.md)
 
 TrustTunnel NAVQS is an unofficial Android fork of the [TrustTunnel Flutter Client](https://github.com/TrustTunnel/TrustTunnelFlutterClient) for self-hosted TrustTunnel servers.
 
-**[Android APK and release notes](https://github.com/cyberspinex/TrustTunnelFlutterClient/releases)**
+**[Download Android APK v0.0.0-navqs.31](https://github.com/cyberspinex/TrustTunnelFlutterClient/releases/tag/v0.0.0-navqs.31)**
 
 ## What NAVQS adds
 
 1. **Dark mode.** Choose the light theme, the dark theme, or the Android system setting.
-2. **App VPN (per-app split tunneling).** Send only selected apps through the VPN, or let selected apps bypass it. This feature is still being tested on Android devices.
+2. **App VPN (per-app split tunneling).** Send only selected apps through the VPN, or let selected apps bypass it. App VPN rules are saved locally.
 3. **Quick Settings tile.** Connect to your default TrustTunnel server or disconnect from Android Quick Settings, even when the app is closed.
 
 ## Download and install
 
-When a public build is available, download the `.apk` from **Assets** on the release page. The release notes list the included features, supported architectures and any known limitations.
+Download the `.apk` from **Assets** on the release page. The first public preview is for ARM64 Android devices (`arm64-v8a`). See [all releases](https://github.com/cyberspinex/TrustTunnelFlutterClient/releases) for other versions.
 
 To use the tile, first configure a default server in NAVQS and grant Android VPN permission when prompted. Then edit the Quick Settings panel and add the TrustTunnel NAVQS tile.
 
