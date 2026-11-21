@@ -1,43 +1,20 @@
-<p align="center">
-  <a href="https://cdn.adguardcdn.com/website/github.com/TrustTunnel/logo_light.svg#gh-light-mode-only">
-    <img src="https://cdn.adguardcdn.com/website/github.com/TrustTunnel/logo_light.svg#gh-light-mode-only" width="300" alt="TrustTunnel" />
-  </a>
-  <a href="https://cdn.adguardcdn.com/website/github.com/TrustTunnel/logo_dark.svg#gh-dark-mode-only">
-    <img src="https://cdn.adguardcdn.com/website/github.com/TrustTunnel/logo_dark.svg#gh-dark-mode-only" width="300" alt="TrustTunnel" />
-  </a>
-</p>
+# TrustTunnel NAVQS
 
-# <p align="center">TrustTunnel Flutter Client</p>
+TrustTunnel NAVQS is an unofficial Android fork of the [TrustTunnel Flutter Client](https://github.com/TrustTunnel/TrustTunnelFlutterClient) for self-hosted TrustTunnel servers.
 
+## What NAVQS adds
 
-<p align="center">
-  <a href="https://github.com/TrustTunnel/TrustTunnel">TrustTunnel Server</a>
-  · <a href="https://github.com/TrustTunnel/TrustTunnelClient">Console client</a>
-  · <a href="https://agrd.io/ios_trusttunnel">App Store (iOS)</a>
-  · <a href="https://agrd.io/macos_trusttunnel">App Store (macOS)</a>
-  · <a href="https://agrd.io/android_trusttunnel">Play Store</a>
-</p>
+1. **Dark mode.** Choose a light or dark theme, or follow the Android system setting.
+2. **App VPN (per-app split tunneling).** Send only selected apps through the VPN, or let selected apps bypass it. This feature is still being tested on Android devices.
+3. **Quick Settings tile.** Connect to your default TrustTunnel server or disconnect from the Android Quick Settings panel, even when the app is closed.
 
-**TrustTunnel Flutter Client** is a VPN client for Android, iOS, and macOS, built with Flutter.
-It provides a clean and focused graphical interface for connecting to **self-hosted TrustTunnel VPN servers**.
+## Android APK
 
-The application acts as a thin, user-facing layer on top of the TrustTunnel VPN stack. It does not attempt to hide the underlying architecture or networking model. Instead, it exposes core concepts — servers, endpoints, credentials, and transport protocols — in a clear and predictable form suitable for both beginners and experienced users.
+See [GitHub Releases](https://github.com/cyberspinex/TrustTunnelFlutterClient/releases) for public builds. When a build is available, download the `.apk` from the release’s **Assets** section. Each release describes the features included in that build.
 
-Whether you are setting up your first self-hosted VPN or operating your own infrastructure, the Flutter client helps you connect, observe, and manage VPN traffic with confidence.
+## Upstream documentation
 
-### Why TrustTunnel Flutter Client
-
-- **Cross-platform by design**
-  Built with Flutter, the client provides a consistent experience on Android, iOS, and macOS while integrating directly with system VPN APIs on each platform.
-
-- **Clean separation of concerns**
-  VPN functionality lives in a dedicated Flutter plugin with native bindings, while the application focuses on user experience and configuration. This architecture keeps the codebase understandable and easy to maintain.
-
-- **Self-hosted by default**
-  No bundled servers, no shared exit nodes, and no third-party VPN providers. You connect only to servers you install and operate yourself.
-
-- **Transparent and controllable**
-  The client exposes key concepts such as endpoints, credentials, protocols, and routing behavior instead of hiding them behind abstractions, giving you full visibility into how your VPN works.
+The sections below describe the original TrustTunnel Flutter Client, including its build instructions and VPN configuration.
 
 ## Table of Contents
 - [TrustTunnel Flutter Client](#trusttunnel-flutter-client)
