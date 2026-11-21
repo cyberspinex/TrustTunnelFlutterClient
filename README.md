@@ -1,45 +1,48 @@
 # TrustTunnel NAVQS
 
+English · [Русский](README.ru.md)
+
 TrustTunnel NAVQS is an unofficial Android fork of the [TrustTunnel Flutter Client](https://github.com/TrustTunnel/TrustTunnelFlutterClient) for self-hosted TrustTunnel servers.
+
+**[Android APK and release notes](https://github.com/cyberspinex/TrustTunnelFlutterClient/releases)**
 
 ## What NAVQS adds
 
-1. **Dark mode.** Choose a light or dark theme, or follow the Android system setting.
+1. **Dark mode.** Choose the light theme, the dark theme, or the Android system setting.
 2. **App VPN (per-app split tunneling).** Send only selected apps through the VPN, or let selected apps bypass it. This feature is still being tested on Android devices.
-3. **Quick Settings tile.** Connect to your default TrustTunnel server or disconnect from the Android Quick Settings panel, even when the app is closed.
+3. **Quick Settings tile.** Connect to your default TrustTunnel server or disconnect from Android Quick Settings, even when the app is closed.
 
-## Android APK
+## Download and install
 
-See [GitHub Releases](https://github.com/cyberspinex/TrustTunnelFlutterClient/releases) for public builds. When a build is available, download the `.apk` from the release’s **Assets** section. Each release describes the features included in that build.
+When a public build is available, download the `.apk` from **Assets** on the release page. The release notes list the included features, supported architectures and any known limitations.
+
+To use the tile, first configure a default server in NAVQS and grant Android VPN permission when prompted. Then edit the Quick Settings panel and add the TrustTunnel NAVQS tile.
 
 ## Upstream documentation
 
 The sections below describe the original TrustTunnel Flutter Client, including its build instructions and VPN configuration.
 
 ## Table of Contents
-- [TrustTunnel Flutter Client](#trusttunnel-flutter-client)
-    - [Why TrustTunnel Flutter Client](#why-trusttunnel-flutter-client)
-  - [Table of Contents](#table-of-contents)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Building](#building)
-      - [1. Clone repository](#1-clone-repository)
-      - [2. Use make to initialize project](#2-use-make-to-initialize-project)
-      - [3. Configure GitHub Packages access](#3-configure-github-packages-access)
-      - [4. Android: configure signing](#4-android-configure-signing)
-      - [5. iOS: install pods and configure signing](#5-ios-install-pods-and-configure-signing)
-      - [6. macOS: install pods and configure signing](#6-macos-install-pods-and-configure-signing)
-      - [7. Build or run the application](#7-build-or-run-the-application)
-  - [Usage](#usage)
-    - [Quick Start](#quick-start)
-    - [Server Configuration](#server-configuration)
-    - [Routing Profiles](#routing-profiles)
-    - [Excluded Routes](#excluded-routes)
-    - [Query Logs](#query-logs)
-  - [How TrustTunnel Works](#how-trusttunnel-works)
-    - [Flutter App and VPN Plugin](#flutter-app-and-vpn-plugin)
-    - [Running \& Development](#running--development)
-  - [License](#license)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Building](#building)
+    - [1. Clone repository](#1-clone-repository)
+    - [2. Use make to initialize project](#2-use-make-to-initialize-project)
+    - [3. Configure GitHub Packages access](#3-configure-github-packages-access)
+    - [4. Android: configure signing](#4-android-configure-signing)
+    - [5. iOS: install pods and configure signing](#5-ios-install-pods-and-configure-signing)
+    - [6. macOS: install pods and configure signing](#6-macos-install-pods-and-configure-signing)
+    - [7. Build or run the application](#7-build-or-run-the-application)
+- [Usage](#usage)
+  - [Quick Start](#quick-start)
+  - [Server Configuration](#server-configuration)
+  - [Routing Profiles](#routing-profiles)
+  - [Excluded Routes](#excluded-routes)
+  - [Query Logs](#query-logs)
+- [How TrustTunnel Works](#how-trusttunnel-works)
+  - [Flutter App and VPN Plugin](#flutter-app-and-vpn-plugin)
+  - [Running \& Development](#running--development)
+- [License](#license)
 
 ## Getting Started
 ### Prerequisites
